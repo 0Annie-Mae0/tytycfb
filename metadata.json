@@ -1,0 +1,6 @@
+{
+  "name": "Catfishing for Cash",
+  "description": "An interactive fiction story exploring online catfishing, psychological identity drift, and gradual feminization.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

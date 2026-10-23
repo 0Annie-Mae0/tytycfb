@@ -1,0 +1,2102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Catfishing for Cash</title>
+<style>
+  :root {
+    --bg-dark: #090a0f;
+    --bg-card: #12141f;
+    --bg-elevated: #1a1e2e;
+    --border: #262c42;
+    --text: #dce3f1;
+    --text-muted: #7c88a8;
+    --accent-soft: #f472b6;
+    --accent-slutty: #d946ef;
+    --accent-dominant: #a855f7;
+    --accent-bitter: #38bdf8;
+    --gold: #facc15;
+    --green: #4ade80;
+    --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --font-mono: 'Consolas', 'Courier New', monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background-color: var(--bg-dark);
+    color: var(--text);
+    font-family: var(--font-sans);
+    line-height: 1.7;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+  }
+
+  #game-layout {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    max-width: 1360px;
+    width: 100%;
+    min-height: 100vh;
+    background: var(--bg-card);
+    box-shadow: 0 0 60px rgba(0,0,0,0.85);
+  }
+
+  /* SIDEBAR / HUD */
+  #sidebar {
+    background: #0d0f17;
+    border-right: 1px solid var(--border);
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    overflow-y: auto;
+    max-height: 100vh;
+    position: sticky;
+    top: 0;
+  }
+
+  .hud-box {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 1rem;
+  }
+
+  .hud-header {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 0.35rem;
+    margin-bottom: 0.6rem;
+  }
+
+  .portrait-frame {
+    width: 100%;
+    height: 180px;
+    background: #050608;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .portrait-frame img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .stat-line {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85rem;
+    margin-bottom: 0.3rem;
+  }
+
+  .bar-bg {
+    width: 100%;
+    height: 6px;
+    background: #090a10;
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 0.6rem;
+  }
+
+  .bar-fill {
+    height: 100%;
+    transition: width 0.3s ease;
+  }
+
+  /* MAIN VIEWPORT */
+  #viewport {
+    padding: 2.5rem 3.5rem;
+    display: flex;
+    flex-direction: column;
+    max-width: 920px;
+    overflow-y: auto;
+  }
+
+  .scene-img-box {
+    width: 100%;
+    height: 320px;
+    background: #06070a;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 1.75rem;
+  }
+
+  .scene-img-box img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  /* Placeholder renderer */
+  .img-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(circle at center, #181d30 0%, #0d0f18 100%);
+    padding: 1.5rem;
+    text-align: center;
+    border: 1px dashed #3a4366;
+  }
+
+  .img-placeholder .tag {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--accent-soft);
+    background: rgba(244, 114, 182, 0.12);
+    padding: 0.2rem 0.6rem;
+    border-radius: 4px;
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+  }
+
+  .img-placeholder .desc {
+    font-size: 0.9rem;
+    color: var(--text);
+    font-style: italic;
+    max-width: 85%;
+  }
+
+  /* NARRATIVE TYPOGRAPHY */
+  .prose p {
+    font-size: 1.05rem;
+    margin-bottom: 1.35rem;
+    color: #cfd8e8;
+  }
+
+  .prose p.internal-thought {
+    color: #fbcfe8;
+    border-left: 2px solid var(--accent-soft);
+    padding-left: 1rem;
+    font-style: italic;
+    margin: 1.25rem 0;
+  }
+
+  /* CHAT EMULATION */
+  .chat-stream {
+    background: #0c0e17;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.25rem;
+    margin: 1.5rem 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+  }
+
+  .chat-line {
+    font-size: 0.95rem;
+    line-height: 1.45;
+  }
+
+  .chat-sender {
+    font-weight: 700;
+    margin-right: 0.4rem;
+  }
+
+  .sender-player { color: var(--accent-soft); }
+  .sender-gomez { color: var(--accent-dominant); }
+  .sender-dominic { color: #94a3b8; }
+  .sender-felix { color: #818cf8; }
+  .sender-adrian { color: #34d399; }
+  .sender-dave { color: #facc15; }
+  .sender-kev { color: #4ade80; }
+  .sender-stranger { color: #f87171; }
+
+  .audio-bubble {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: #171b2b;
+    border: 1px solid var(--border);
+    padding: 0.35rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.88rem;
+    color: var(--accent-soft);
+    margin-top: 0.2rem;
+  }
+
+  .audio-play-icon {
+    font-size: 0.75rem;
+  }
+
+  /* CHOICES & INPUTS */
+  .choice-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+  }
+
+  button.choice-btn {
+    background: var(--bg-elevated);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.95rem 1.25rem;
+    font-size: 0.98rem;
+    font-family: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  button.choice-btn:hover {
+    background: #232940;
+    border-color: var(--accent-soft);
+    transform: translateX(4px);
+  }
+
+  .choice-hint {
+    font-size: 0.75rem;
+    color: var(--accent-soft);
+    font-family: var(--font-mono);
+    margin-left: 1rem;
+  }
+
+  .input-panel {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 1.25rem;
+    margin-top: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .input-panel label {
+    font-size: 0.88rem;
+    color: var(--text-muted);
+  }
+
+  .input-panel input[type="text"] {
+    background: #090a10;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 0.75rem;
+    color: #fff;
+    font-size: 1rem;
+    font-family: inherit;
+  }
+
+  .input-panel input[type="text"]:focus {
+    outline: none;
+    border-color: var(--accent-soft);
+  }
+
+  /* SYSTEM BAR */
+  .sys-bar {
+    position: fixed;
+    top: 0;
+    right: 0;
+    padding: 0.5rem 1rem;
+    display: flex;
+    gap: 0.5rem;
+    z-index: 100;
+  }
+
+  .sys-btn {
+    background: rgba(13, 15, 23, 0.85);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    padding: 0.25rem 0.65rem;
+    border-radius: 4px;
+    cursor: pointer;
+    backdrop-filter: blur(4px);
+  }
+
+  .sys-btn:hover {
+    color: #fff;
+    border-color: var(--accent-soft);
+  }
+
+  @media (max-width: 950px) {
+    #game-layout { grid-template-columns: 1fr; }
+    #sidebar { position: static; max-height: none; }
+    #viewport { padding: 1.5rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="sys-bar">
+  <button class="sys-btn" onclick="Engine.save()">Save</button>
+  <button class="sys-btn" onclick="Engine.load()">Load</button>
+  <button class="sys-btn" onclick="Engine.restart()">Restart</button>
+</div>
+
+<div id="game-layout">
+  <!-- HUD SIDEBAR -->
+  <aside id="sidebar">
+    <div class="hud-box">
+      <div class="hud-header">Identity</div>
+      <div class="portrait-frame" id="hud-portrait"></div>
+      <div style="font-weight: 700; font-size: 1.05rem;" id="hud-name">Mark</div>
+      <div style="font-size: 0.78rem; color: var(--text-muted);" id="hud-subname">Unemployed Delivery Guy</div>
+    </div>
+
+    <div class="hud-box">
+      <div class="hud-header">Schedule & Cycle</div>
+      <div class="stat-line"><span>Day:</span><strong id="hud-day-num" style="color:var(--gold);">Day 1</strong></div>
+      <div class="stat-line"><span>Time:</span><span id="hud-time-of-day" style="color:var(--accent-bitter);">Morning</span></div>
+    </div>
+
+    <div class="hud-box">
+      <div class="hud-header">Feminization & Mindshift</div>
+      <div class="stat-line">
+        <span>Stage:</span>
+        <strong id="hud-stage-label" style="color: var(--accent-soft)">Stage 0</strong>
+      </div>
+      <div class="stat-line">
+        <span>Internal Drift:</span>
+        <span id="hud-trans-val">0%</span>
+      </div>
+      <div class="bar-bg">
+        <div class="bar-fill" id="hud-trans-bar" style="width: 0%; background: var(--accent-soft);"></div>
+      </div>
+      <div class="stat-line" style="margin-top: 0.4rem;">
+        <span>Voice Ladder:</span>
+        <span id="hud-voice-ladder">0 - Male</span>
+      </div>
+      <div class="stat-line">
+        <span>Body Femininity:</span>
+        <span id="hud-body-val">0 / 100</span>
+      </div>
+      <div class="bar-bg">
+        <div class="bar-fill" id="hud-body-bar" style="width: 0%; background: var(--accent-slutty);"></div>
+      </div>
+      <div class="stat-line">
+        <span>Visual Disguise:</span>
+        <span id="hud-visual-ladder">0 - Raw Male</span>
+      </div>
+    </div>
+
+    <div class="hud-box">
+      <div class="hud-header">Psychological Drift</div>
+      <div class="stat-line"><span>Soft:</span><span id="val-soft">0</span></div>
+      <div class="bar-bg"><div class="bar-fill" id="bar-soft" style="width: 0%; background: var(--accent-soft);"></div></div>
+
+      <div class="stat-line"><span>Validation (Slutty):</span><span id="val-slutty">0</span></div>
+      <div class="bar-bg"><div class="bar-fill" id="bar-slutty" style="width: 0%; background: var(--accent-slutty);"></div></div>
+
+      <div class="stat-line"><span>Dominance:</span><span id="val-dominant">0</span></div>
+      <div class="bar-bg"><div class="bar-fill" id="bar-dominant" style="width: 0%; background: var(--accent-dominant);"></div></div>
+
+      <div class="stat-line"><span>Bitterness:</span><span id="val-bitter">0</span></div>
+      <div class="bar-bg"><div class="bar-fill" id="bar-bitter" style="width: 0%; background: var(--accent-bitter);"></div></div>
+    </div>
+
+    <div class="hud-box">
+      <div class="hud-header">Ledger & Affection</div>
+      <div class="stat-line"><span>Money:</span><strong id="hud-money" style="color: var(--gold);">$100</strong></div>
+      <div class="stat-line"><span>Simp Rep:</span><strong id="hud-rep" style="color: var(--green);">0</strong></div>
+
+      <div class="hud-header" style="margin-top: 0.8rem;">Core Orbiters</div>
+      <div class="stat-line"><span>Dominic:</span><span id="pts-dominic">0</span></div>
+      <div class="stat-line"><span>Felix:</span><span id="pts-felix">0</span></div>
+      <div class="stat-line"><span>Adrian:</span><span id="pts-adrian">0</span></div>
+      <div class="stat-line"><span>Gomez:</span><span id="pts-gomez">0</span></div>
+    </div>
+  </aside>
+
+  <!-- MAIN SCENE DISPLAY -->
+  <main id="viewport">
+    <div class="scene-img-box" id="scene-img-slot"></div>
+    <div class="prose" id="scene-text-slot"></div>
+    <div id="scene-input-slot"></div>
+    <div class="choice-stack" id="scene-choices-slot"></div>
+  </main>
+</div>
+
+<script>
+/* =========================================================================
+   ASSET REGISTRY
+   ========================================================================= */
+const ASSET_MANIFEST = {
+  // Backgrounds
+  "bg_car_rain": {
+    path: "images/backgrounds/car_rain_dashboard.png",
+    category: "backgrounds",
+    desc: "Inside a beat-up 2004 sedan at night. Rain streams down the windshield, dashboard glowing dim amber."
+  },
+  "bg_messy_room": {
+    path: "images/backgrounds/messy_bedroom.png",
+    category: "backgrounds",
+    desc: "A cramped, dusty male apartment bedroom. Piles of laundry, unmade bed, cords tangled across the carpet."
+  },
+  "bg_discord_night": {
+    path: "images/backgrounds/discord_night_ambient.png",
+    category: "backgrounds",
+    desc: "Dark room illuminated only by the harsh slate and violet glow of a Discord window on a desktop monitor."
+  },
+  "bg_stage1_lights": {
+    path: "images/backgrounds/bedroom_stage1_lights.png",
+    category: "backgrounds",
+    desc: "Cleaned bedroom bathed in a warm violet and amber glow from fairy lights hung over the curtain rod."
+  },
+  "bg_stage2_feminized": {
+    path: "images/backgrounds/bedroom_stage2_feminized.png",
+    category: "backgrounds",
+    desc: "Feminine haven: pastel plushies on pillows, lavender diffuser misting, scented soy candles."
+  },
+
+  // Portraits - Men
+  "portrait_gomez": {
+    path: "images/portraits/gomez_normal.png",
+    category: "portraits",
+    desc: "Gomez's avatar: sleek neon mask, sharp designer jawline, cyber-hustler demeanor."
+  },
+  "portrait_dominic": {
+    path: "images/portraits/dominic_avatar.png",
+    category: "portraits",
+    desc: "Dominic's avatar: older man in a charcoal suit, silver hair, heavy calculating gaze."
+  },
+  "portrait_felix": {
+    path: "images/portraits/felix_avatar.png",
+    category: "portraits",
+    desc: "Felix's avatar: ink sketch of an anime boy burying his face in his hands with flushed cheeks."
+  },
+  "portrait_adrian": {
+    path: "images/portraits/adrian_avatar.png",
+    category: "portraits",
+    desc: "Adrian's avatar: warm indie game developer portrait, wireframe glasses, cozy knitted scarf."
+  },
+
+  // Portraits - Player Progression
+  "portrait_player_boy": {
+    path: "images/portraits/player/player_boy_base.png",
+    category: "portraits",
+    desc: "Mark: exhausted delivery guy with dark circles under his eyes, hollow cheeks, and rough stubble."
+  },
+  "portrait_fem_goth": {
+    path: "images/portraits/player/goth_stage1.png",
+    category: "portraits",
+    desc: "Raven: dark choppy bangs, tight silver choker, smoky eyeliner framing heavy, magnetic eyes."
+  },
+  "portrait_fem_soft": {
+    path: "images/portraits/player/soft_stage1.png",
+    category: "portraits",
+    desc: "Lily: soft caramel bob wig, glossy pink lips, oversized cream knit sweater collar."
+  },
+  "portrait_fem_egirl": {
+    path: "images/portraits/player/egirl_stage1.png",
+    category: "portraits",
+    desc: "Neko: bubblegum pink pigtails, tiny heart stamped under left eye, teasing pout."
+  },
+  "portrait_fem_mask": {
+    path: "images/feminization/fem_wig_mask.png",
+    category: "feminization",
+    desc: "Silky synthetic lace-front wig, winged eyeliner, black cloth mask hiding the masculine jawline."
+  },
+
+  // Items & Setups
+  "item_receipt": {
+    path: "images/items/delivery_uniform.png",
+    category: "items",
+    desc: "Crumped blue polyester pizza polo shirt tossed onto a greasy counter with a twenty and a five."
+  },
+  "item_desk_glow": {
+    path: "images/setups/desk_night_glow.png",
+    category: "setups",
+    desc: "Desktop mechanical keyboard glowing with custom pastel keycaps, Discord open, mug of herbal tea."
+  },
+  "item_plushie": {
+    path: "images/items/plushie_cat.png",
+    category: "items",
+    desc: "A massive, soft lavender plush cat with closed sleeping eyes and blushing pink cheeks."
+  },
+  "item_thigh_highs": {
+    path: "images/items/thigh_highs_package.png",
+    category: "items",
+    desc: "Pair of charcoal knit over-the-knee socks laid out across clean sheets under fairy lights."
+  },
+  "item_pitch_graph": {
+    path: "images/feminization/voice_pitch_graph.png",
+    category: "feminization",
+    desc: "Audio spectrum analysis tool on screen, pitch graph straining into the 220Hz feminine zone."
+  },
+  "item_workout_mat": {
+    path: "images/feminization/workout_mat.png",
+    category: "feminization",
+    desc: "A rolled-out yoga mat next to the bed with resistance bands and a water bottle."
+  }
+};
+
+/* =========================================================================
+   GAME STATE
+   ========================================================================= */
+let S = {
+  playerName: "Mark",
+  accountName: "",
+  personaName: "Luna",
+  personaType: "soft", // "goth" | "soft" | "egirl"
+
+  day: 1,
+  timeOfDay: "Morning", // "Morning", "Afternoon", "Night"
+
+  money: 100,
+  skins: 0,
+  suspicion: 0,
+  trust: 0,
+  rep: 0,
+
+  // Personality Stats
+  soft: 0,
+  slutty: 0,
+  dominant: 0,
+  bitter: 0,
+
+  // Affection Points
+  dominicPoints: 0,
+  felixPoints: 0,
+  adrianPoints: 0,
+  gomezPoints: 0,
+
+  // Progression Trackers
+  femStage: 0,
+  voiceLadder: 0,
+  voiceProgress: 0,
+  bodyFemininity: 0,
+  visualLadder: 0,
+  transitionProgress: 0,
+
+  // Core 4 Event Progress Tracker
+  dominicStep: 0,
+  felixStep: 0,
+  adrianStep: 0,
+  gomezStep: 0,
+
+  flags: {
+    tookHandout: false,
+    cabTaken: false,
+    wallpaperFeminized: false,
+    roomTidied: false,
+    plushieUnboxed: false,
+    thighHighsWorn: false,
+    banteredKev: false,
+    daveSteakReceived: false
+  },
+
+  currentScene: "scene_start"
+};
+
+/* =========================================================================
+   CUSTOM ENGINE
+   ========================================================================= */
+const Engine = {
+  renderImage(key) {
+    const box = document.getElementById("scene-img-slot");
+    const asset = ASSET_MANIFEST[key];
+    if (!asset) {
+      box.innerHTML = `
+        <div class="img-placeholder">
+          <span class="tag">MISSING ASSET KEY</span>
+          <span class="desc">Key '${key}' is not defined in ASSET_MANIFEST.</span>
+        </div>`;
+      return;
+    }
+
+    const img = new Image();
+    img.src = asset.path;
+    img.alt = asset.desc;
+    img.onload = () => {
+      box.innerHTML = "";
+      box.appendChild(img);
+    };
+    img.onerror = () => {
+      box.innerHTML = `
+        <div class="img-placeholder">
+          <span class="tag">/${asset.path}</span>
+          <span class="tag" style="color:var(--accent-dominant)">${asset.category.toUpperCase()}</span>
+          <span class="desc">"${asset.desc}"</span>
+        </div>`;
+    };
+  },
+
+  updateHUD() {
+    document.getElementById("hud-day-num").textContent = `Day ${S.day}`;
+    document.getElementById("hud-time-of-day").textContent = S.timeOfDay;
+
+    document.getElementById("val-soft").textContent = S.soft;
+    document.getElementById("bar-soft").style.width = Math.min(S.soft * 8, 100) + "%";
+
+    document.getElementById("val-slutty").textContent = S.slutty;
+    document.getElementById("bar-slutty").style.width = Math.min(S.slutty * 8, 100) + "%";
+
+    document.getElementById("val-dominant").textContent = S.dominant;
+    document.getElementById("bar-dominant").style.width = Math.min(S.dominant * 8, 100) + "%";
+
+    document.getElementById("val-bitter").textContent = S.bitter;
+    document.getElementById("bar-bitter").style.width = Math.min(S.bitter * 8, 100) + "%";
+
+    document.getElementById("hud-money").textContent = `$${S.money}`;
+    document.getElementById("hud-rep").textContent = S.rep;
+
+    document.getElementById("pts-dominic").textContent = S.dominicPoints;
+    document.getElementById("pts-felix").textContent = S.felixPoints;
+    document.getElementById("pts-adrian").textContent = S.adrianPoints;
+    document.getElementById("pts-gomez").textContent = S.gomezPoints;
+
+    document.getElementById("hud-body-val").textContent = `${S.bodyFemininity} / 100`;
+    document.getElementById("hud-body-bar").style.width = Math.min(S.bodyFemininity, 100) + "%";
+
+    // Transition progress calculation
+    let calc = (S.femStage * 20) + (S.voiceLadder * 6) + (S.visualLadder * 6) + Math.floor(S.bodyFemininity * 0.15) + Math.floor((S.soft + S.slutty) / 2);
+    if (S.bitter > 5) calc -= (S.bitter * 1.5);
+    S.transitionProgress = Math.max(0, Math.min(Math.round(calc), 100));
+
+    document.getElementById("hud-trans-val").textContent = S.transitionProgress + "%";
+    document.getElementById("hud-trans-bar").style.width = S.transitionProgress + "%";
+
+    const stageNames = [
+      "Stage 0: Unbroken Male",
+      "Stage 1: Online Habits & Speech",
+      "Stage 2: Environment Shift",
+      "Stage 3: Body & Voice Integration",
+      "Stage 4: Complete Internalization"
+    ];
+    document.getElementById("hud-stage-label").textContent = stageNames[S.femStage] || "Transitioning";
+
+    const voiceLabels = ["0 - Male", "1 - Feminine Typing", "2 - Breathy Whisper", "3 - Head Voice", "4 - Siren Control"];
+    document.getElementById("hud-voice-ladder").textContent = voiceLabels[S.voiceLadder] || "Level " + S.voiceLadder;
+
+    const visualLabels = ["0 - Raw Male", "1 - Cropped Angles", "2 - Wig + Mask", "3 - Full Makeup Wig", "4 - Fully Feminine"];
+    document.getElementById("hud-visual-ladder").textContent = visualLabels[S.visualLadder] || "Level " + S.visualLadder;
+
+    // Portrait & display titles
+    const portraitBox = document.getElementById("hud-portrait");
+    let portraitKey = "portrait_player_boy";
+    let dispName = S.playerName;
+    let subName = "Former Delivery Boy";
+
+    if (S.femStage >= 1 && S.personaName) {
+      dispName = S.personaName;
+      subName = `@${S.accountName || "anon"} · ${S.personaType.toUpperCase()}`;
+
+      if (S.visualLadder >= 2) {
+        portraitKey = "portrait_fem_mask";
+      } else if (S.personaType === "goth") {
+        portraitKey = "portrait_fem_goth";
+      } else if (S.personaType === "egirl") {
+        portraitKey = "portrait_fem_egirl";
+      } else {
+        portraitKey = "portrait_fem_soft";
+      }
+    }
+
+    document.getElementById("hud-name").textContent = dispName;
+    document.getElementById("hud-subname").textContent = subName;
+
+    const asset = ASSET_MANIFEST[portraitKey];
+    if (asset) {
+      portraitBox.innerHTML = `<img src="${asset.path}" alt="${asset.desc}" onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\\'img-placeholder\\' style=\\'font-size:0.75rem;\\'>[${dispName}]</div>';">`;
+    }
+  },
+
+  goTo(sceneId) {
+    const scene = SCENE_GRAPH[sceneId];
+    if (!scene) {
+      console.error("Target scene not found:", sceneId);
+      return;
+    }
+
+    S.currentScene = sceneId;
+
+    if (typeof scene.onEnter === "function") {
+      scene.onEnter(S);
+    }
+
+    if (scene.image) {
+      this.renderImage(scene.image);
+    }
+
+    const textSlot = document.getElementById("scene-text-slot");
+    textSlot.innerHTML = typeof scene.text === "function" ? scene.text(S) : scene.text;
+
+    const inputSlot = document.getElementById("scene-input-slot");
+    inputSlot.innerHTML = "";
+    if (typeof scene.inputs === "function") {
+      scene.inputs(S, inputSlot);
+    }
+
+    const choiceSlot = document.getElementById("scene-choices-slot");
+    choiceSlot.innerHTML = "";
+
+    const availableChoices = scene.choices ? scene.choices.filter(c => !c.condition || c.condition(S)) : [];
+    availableChoices.forEach(c => {
+      const btn = document.createElement("button");
+      btn.className = "choice-btn";
+      const hint = c.hint ? `<span class="choice-hint">${c.hint}</span>` : "";
+      btn.innerHTML = `<span>${c.text}</span> ${hint}`;
+      btn.onclick = () => {
+        if (c.action) c.action(S);
+        this.updateHUD();
+        this.goTo(c.target);
+      };
+      choiceSlot.appendChild(btn);
+    });
+
+    this.updateHUD();
+    document.getElementById("viewport").scrollTo({ top: 0, behavior: "smooth" });
+  },
+
+  save() {
+    localStorage.setItem("catfishing_custom_save", JSON.stringify(S));
+    alert("Progress saved to browser storage.");
+  },
+
+  load() {
+    const raw = localStorage.getItem("catfishing_custom_save");
+    if (!raw) return alert("No save file found.");
+    try {
+      S = JSON.parse(raw);
+      this.goTo(S.currentScene);
+      alert("Game loaded successfully.");
+    } catch (e) {
+      alert("Failed to load save file.");
+    }
+  },
+
+  restart() {
+    if (confirm("Reset all progress back to the start?")) {
+      localStorage.removeItem("catfishing_custom_save");
+      location.reload();
+    }
+  }
+};
+
+/* =========================================================================
+   SCENE GRAPH IMPLEMENTATION
+   ========================================================================= */
+const SCENE_GRAPH = {
+  // ----------------- START & CHARACTER CREATION -----------------
+  "scene_start": {
+    image: "item_receipt",
+    text: () => `
+      <p>This interactive fiction game explores themes of online catfishing, psychological identity drift, and gradual male-to-feminine transition.</p>
+      <p>This game contains adult themes and suggestive content. Are you of legal age to play this game?</p>
+    `,
+    choices: [
+      { text: "Yes, I am of legal age.", target: "scene_character_creation" },
+      { text: "No, take me back.", target: "scene_puppy" }
+    ]
+  },
+
+  "scene_puppy": {
+    image: "item_plushie",
+    text: () => `
+      <p>Here is a picture of a cute puppy instead.</p>
+      <p>[Insert pic of cute puppy here]</p>
+    `,
+    choices: [
+      { text: "Return to title.", target: "scene_start" }
+    ]
+  },
+
+  "scene_character_creation": {
+    image: "item_receipt",
+    text: () => `
+      <p>Before the night unravels, what is your legal, everyday name?</p>
+    `,
+    inputs: (state, container) => {
+      const panel = document.createElement("div");
+      panel.className = "input-panel";
+      panel.innerHTML = `
+        <label for="char-name-input">Enter your name:</label>
+        <input type="text" id="char-name-input" value="${state.playerName}" placeholder="e.g. Mark">
+      `;
+      container.appendChild(panel);
+    },
+    choices: [
+      {
+        text: "Begin the night.",
+        action: (state) => {
+          const val = document.getElementById("char-name-input").value.trim();
+          if (val) state.playerName = val;
+        },
+        target: "scene_first_scene"
+      }
+    ]
+  },
+
+  // ----------------- FIRST SCENE: THE FIRING -----------------
+  "scene_first_scene": {
+    image: "item_receipt",
+    text: (s) => `
+      <p>The rain is coming down in sheets by the time you push open the door to Tony’s Pizza.</p>
+      <p>Water pours off your jacket and drips onto the already-stained floor mat. Your shoes squelch with every step, leaving a trail of muddy footprints behind you. The little bell above the door jingles weakly, barely audible over the pounding rain outside.</p>
+      <p>Behind the counter, your manager is already waiting.</p>
+      <p>His arms are crossed, his face flushed red, and his jaw clenched so tightly that a vein pulses in his forehead. The moment his eyes land on you, you know you're in trouble.</p>
+      <p>“Look, I know I'm late, but—”</p>
+      <p>“Late?” He lets out a humorless laugh.</p>
+      <p>You hold up a hand, trying to get a word in. “There was an accident on the main road, and traffic was backed up for nearly forty minutes. Then I had a delivery order that took forever because the customer kept changing—”</p>
+      <p>“I don't want to hear it, ${s.playerName}.”</p>
+      <p>“This is the third time you've shown up late this week! Third time! Customers are calling because their pizzas are sitting here getting cold. I've rearranged schedules and listened to every story you've come up with. Well, I'm done. You're fired, ${s.playerName}. Get your stuff and get out.”</p>
+      <p class="internal-thought">You stand there dripping, the fluorescent lights buzzing overhead. The smell of hot dough and cheap pepperoni hangs thick in the air.</p>
+    `,
+    choices: [
+      {
+        text: "“You can’t fire me. I quit.”",
+        hint: "+2 Bitter",
+        action: (s) => { s.bitter += 2; s.flags.tookHandout = false; },
+        target: "scene_quit"
+      },
+      {
+        text: "“Please… just give me one more chance.”",
+        hint: "+$25 Cash, +1 Soft",
+        action: (s) => { s.money += 25; s.soft += 1; s.flags.tookHandout = true; },
+        target: "scene_plead"
+      }
+    ]
+  },
+
+  "scene_quit": {
+    image: "item_receipt",
+    text: () => `
+      <p>“You can’t fire me,” you say, trying to keep your voice steady. “I quit.”</p>
+      <p>The manager’s face goes from red to purple.</p>
+      <p>“Oh, you quit? After all the chances I already gave you? After the extra shifts I handed you when no one else would take them?” He steps around the counter, jabbing a finger toward the glass door. “Get the hell out of my shop before I throw you out.”</p>
+      <p>You don’t wait for him to finish. You turn, water still dripping from your hair, and shove the door open harder than you need to. The little bell rings angrily behind you as you step back into the storm.</p>
+      <p>The street is freezing. A yellow cab pulls slowly past the curb.</p>
+    `,
+    choices: [
+      { text: "Walk home in the freezing downpour.", target: "scene_home" },
+      {
+        text: "Flag down the cab and spend $25 of your remaining money.",
+        hint: "-$25 Money",
+        action: (s) => { s.money -= 25; s.flags.cabTaken = true; },
+        target: "scene_home"
+      }
+    ]
+  },
+
+  "scene_plead": {
+    image: "item_receipt",
+    text: () => `
+      <p>“Please,” you say, the word coming out quieter than you meant. “Just one more chance. I’ll do better. I need this job.”</p>
+      <p>The manager stares at you for a long second. Some of the anger drains out of his face, replaced by heavy exhaustion.</p>
+      <p>“…Shit. Look. I can’t keep you on. Too many complaints already. Corporate’s on my ass.” He digs into his pocket and pulls out a crumpled twenty and a five. “Here. For a cab. Don’t come back.”</p>
+      <p>He presses the wet bills into your hand.</p>
+      <p>You nod once, not trusting yourself to speak, and walk back out into the rain with twenty-five extra dollars in your pocket.</p>
+    `,
+    choices: [
+      { text: "Pocket the cash and walk home in the rain.", target: "scene_home" },
+      {
+        text: "Use the $25 handout to take a warm cab home.",
+        hint: "-$25 Money",
+        action: (s) => { s.money -= 25; s.flags.cabTaken = true; },
+        target: "scene_home"
+      }
+    ]
+  },
+
+  "scene_home": {
+    image: "bg_messy_room",
+    text: () => `
+      <p>You push open the door to your apartment and immediately kick your soaked shoes off. They land with a wet slap against the baseboard.</p>
+      <p>The place smells like old takeout and damp laundry. Your phone battery is down to 12%. Rent is due in six days, and your bank account is a bleak, insulted joke.</p>
+      <p>You drop onto the couch, still in your damp clothes, staring at the blank TV screen. The silence in the room is deafening.</p>
+      <p class="internal-thought">You need to shut your brain off before the panic sets in.</p>
+    `,
+    choices: [
+      { text: "Boot up the PC and play something to distract yourself.", target: "scene_game_time" },
+      { text: "Just lie here on the couch and scroll through your phone.", target: "scene_scroll" }
+    ]
+  },
+
+  "scene_scroll": {
+    image: "bg_messy_room",
+    text: () => `
+      <p>You stay on the couch, phone in hand, scrolling aimlessly through the same apps you’ve already refreshed three times today.</p>
+      <p>Memes. Silent group chats. A couple of job listings you already know you’re unqualified for. Someone’s vacation photos from Maui that make your chest tighten with a hollow ache.</p>
+      <p>After twenty minutes of nothing, the screen feels heavier than it should. Your thumb keeps moving, but your brain isn’t taking anything in.</p>
+      <p>You sit up, shivering slightly in your damp shirt, and turn toward the desk.</p>
+    `,
+    choices: [
+      { text: "Boot up the PC.", target: "scene_game_time" }
+    ]
+  },
+
+  "scene_game_time": {
+    image: "bg_discord_night",
+    text: () => `
+      <p>You boot up the old PC. The fans spin up with a strained whine. After a few minutes of loading screens you’re in your usual game—the one you used to be decent at before life started kicking you in the teeth.</p>
+      <p>You’re mid-match when a voice comes through team chat. High, soft, clearly using a voice changer.</p>
+      <div class="chat-stream">
+        <div class="chat-line"><span class="chat-sender egirl">BunnyBabe_x:</span> heyy, if anyone wants a sleep call later… twenty-five bucks. I’ll stay on voice until you fall asleep~ 💕</div>
+      </div>
+      <p>A few guys in the lobby immediately start typing in chat. One of them has already sent her CashApp tribute from the way he’s bragging.</p>
+      <p>Twenty-five dollars. The exact amount of your manager’s pity handout. She makes that in an hour just by breathing into a microphone while lying in bed.</p>
+    `,
+    choices: [
+      { text: "Try to ignore her and focus on the match.", target: "scene_lose_focus" },
+      {
+        text: "Mute her immediately. You’re not in the mood for that shit.",
+        hint: "+1 Soft",
+        action: (s) => { s.soft += 1; },
+        target: "scene_mute_her"
+      },
+      {
+        text: "Type something angry into team chat.",
+        hint: "+2 Bitter, +1 Dominant",
+        action: (s) => { s.bitter += 2; s.dominant += 1; },
+        target: "scene_flame"
+      }
+    ]
+  },
+
+  "scene_lose_focus": {
+    image: "bg_discord_night",
+    text: () => `
+      <p>You try to ignore her, but your eyes keep drifting to the text chat. Twenty-five dollars. Just to listen to some girl talk until you drift off.</p>
+      <p>Your character gets blindsided and dies. Then dies again. The match is slipping away completely.</p>
+      <div class="chat-stream">
+        <div class="chat-line"><span class="chat-sender egirl">BunnyBabe_x:</span> aww, someone having a rough game?~ 🥺</div>
+      </div>
+      <p class="internal-thought">A vein pulses in your temple. You're broke, freezing, fired, and now being patronized by an e-girl with a microphone filter.</p>
+    `,
+    choices: [
+      { text: "Snap and flame her in chat.", target: "scene_flame" },
+      { text: "Just leave the match entirely.", target: "scene_leave_match" }
+    ]
+  },
+
+  "scene_mute_her": {
+    image: "bg_discord_night",
+    text: () => `
+      <p>You mute her the second she starts advertising. You don't have the stomach for e-girl scams tonight.</p>
+      <p>You try to lock in, but your teammates are playing completely erratically—distracted, typing into team chat, clearly prioritizing whatever she’s whispering over the game.</p>
+      <p>Without support, you get overwhelmed at the checkpoint. The red defeat banner flashes across your screen.</p>
+    `,
+    choices: [
+      { text: "Stare at the defeat screen in the quiet dark.", target: "scene_lose_match" }
+    ]
+  },
+
+  "scene_flame": {
+    image: "bg_discord_night",
+    text: () => `
+      <p>You type fast, your fingers hammering the keys.</p>
+      <div class="chat-stream">
+        <div class="chat-line"><span class="chat-sender sender-player">You:</span> stfu nobody wants to hear your fake ass voice you probably look like a dude</div>
+        <div class="chat-line"><span class="chat-sender egirl">BunnyBabe_x:</span> aww is someone mad? 🥺</div>
+        <div class="chat-line"><span class="chat-sender sender-player">You:</span> mad that you’re clogging the lobby with your shitty ads yeah</div>
+        <div class="chat-line"><span class="chat-sender egirl">BunnyBabe_x:</span> lmaooo you’re actually pressed</div>
+        <div class="chat-line"><span class="chat-sender sender-player">You:</span> pressed that you’re a dude with a voice changer scamming lonely virgins</div>
+        <div class="chat-line"><span class="chat-sender egirl">BunnyBabe_x:</span> mad cuz broke 💅</div>
+      </div>
+      <p>The message sits there. Two other players react with laughing emojis. Someone else types “ratio.”</p>
+      <p>Your character gets deleted mid-fight while you’re still glaring at the screen.</p>
+    `,
+    choices: [
+      { text: "Stare at the defeat screen.", target: "scene_lose_match" }
+    ]
+  },
+
+  "scene_leave_match": {
+    image: "bg_messy_room",
+    text: () => `
+      <p>You don't even bother waiting for the round to end. You disconnect, slam the laptop shut, and sit in the pitch dark.</p>
+      <p>The room feels uncomfortably quiet. Just the distant hiss of traffic on wet asphalt outside.</p>
+      <p class="internal-thought">Twenty-five dollars. Breathing into a mic. Money flowing to someone who didn't even have to leave her bed.</p>
+    `,
+    choices: [
+      { text: "Pull out your phone and search 'sleep calls'.", target: "scene_search" },
+      { text: "Try to fall asleep on the couch.", target: "scene_bed" }
+    ]
+  },
+
+  "scene_lose_match": {
+    image: "bg_discord_night",
+    text: () => `
+      <p>The defeat screen loads.</p>
+      <p><strong>Defeat.</strong><br>MVP: The teammate who spent the entire match simping in chat.</p>
+      <p>You lean back in the chair, your jaw aching from clenching it. Her last phrase is still sitting in the all-chat log:</p>
+      <p style="color:var(--accent-soft); font-style:italic;">“mad cuz broke”</p>
+      <p>You close the game client with a violent click.</p>
+    `,
+    choices: [
+      { text: "Open a private browser tab and search 'sleep calls'.", target: "scene_search" },
+      { text: "Just collapse face-down onto the mattress.", target: "scene_bed" }
+    ]
+  },
+
+  "scene_bed": {
+    image: "bg_messy_room",
+    text: () => `
+      <p>You drop face-first onto the mattress without even taking your damp socks off.</p>
+      <p>The ceiling is the same dirty off-white it’s always been. Headlights from a passing car slide across the wall, briefly illuminating your laundry pile before fading into black.</p>
+      <p>You close your eyes. …Twenty-five dollars. Just to have a soft voice in someone's ear while they drift off. No heavy lifting. No manager screaming in your face.</p>
+      <p>Sleep isn't coming. After ten minutes of tossing on cold sheets, you pull out your phone.</p>
+    `,
+    choices: [
+      { text: "Search it up.", target: "scene_search" }
+    ]
+  },
+
+  "scene_search": {
+    image: "bg_discord_night",
+    text: () => `
+      <p>You unlock your phone and open a private tab.</p>
+      <p>Your thumbs move almost on their own:</p>
+      <p style="font-family:var(--font-mono); color:var(--text-muted); padding-left:1rem;">
+        sleep calls<br>
+        what are sleep calls<br>
+        do people actually pay for sleep calls
+      </p>
+      <p>The search results are an endless rabbit hole of Reddit threads, Twitter screenshots, and Discord logs.</p>
+      <p>Men talking about paying $20 to $40 an hour just to hear gentle breathing and a soft voice while they fall asleep. Forum posts detailing how much money e-girls pull just doing voice calls without ever revealing their faces. Someone mentions using a free pitch modifier and stolen aesthetic photos.</p>
+      <p class="internal-thought">It clicks slowly: You don't need to be a real girl. You just need to sound like one long enough for them to send the cash.</p>
+    `,
+    choices: [
+      { text: "…Maybe I could do this.", target: "scene_realize" }
+    ]
+  },
+
+  "scene_realize": {
+    image: "bg_discord_night",
+    text: (s) => `
+      <p>The idea sits in your chest like something heavy, wrong, and dangerously exciting.</p>
+      <p>Before you can talk yourself out of it, you open Discord. You’re still logged into your primary account—the same one you’ve had for four years, with your real username and an old avatar of you in a grey hoodie.</p>
+      <p>You join an active 4,000-member community gaming server. You drop a message directly into general chat:</p>
+      <div class="chat-stream">
+        <div class="chat-line"><span class="chat-sender sender-player">You:</span> hey does anyone want a sleep call? 25 bucks</div>
+      </div>
+      <p>A few people react with laughing emotes. One guy replies: <em>'lmao who is this dude'</em>. Another: <em>'bro just say you're broke'</em>.</p>
+      <p>You scramble, typing faster: <em>'no fr I’ll stay on until you fall asleep. soft voice and everything'</em>.</p>
+      <p>Someone drops a screenshot of your profile. The laughter is immediate. Your ears burn with hot, prickling shame.</p>
+      <p>Then your direct messages ping with a private notification.</p>
+    `,
+    choices: [
+      { text: "Open the direct message.", target: "scene_gomez_dm" }
+    ]
+  },
+
+  // ----------------- GOMEZ RESCUE & PERSONA -----------------
+  "scene_gomez_dm": {
+    image: "portrait_gomez",
+    text: () => `
+      <div class="chat-stream">
+        <div class="chat-line"><span class="chat-sender sender-gomez">Gomez:</span> you’re really bad at this lol</div>
+        <div class="chat-line"><span class="chat-sender sender-gomez">Gomez:</span> real account, types like a dude, no pics, no effort</div>
+        <div class="chat-line"><span class="chat-sender sender-gomez">Gomez:</span> you’re not gonna make a dollar like that</div>
+        <div class="chat-line"><span class="chat-sender sender-gomez">Gomez:</span> so what’s the move?</div>
+      </div>
+      <p class="internal-thought">His avatar is a sharp neon mask with developer badges. He isn't roasting you—he's watching you like a coach watching an amateur fail basic drills.</p>
+    `,
+    choices: [
+      {
+        text: "Get defensive: “The fuck is your problem? I was just testing something.”",
+        hint: "+1 Bitter, +1 Dominant",
+        action: (s) => { s.bitter += 1; s.dominant += 1; },
+        target: "scene_defensive"
+      },
+      {
+        text: "Try to maintain character: “omg stoppp I’m literally a girl 🥺”",
+        hint: "+1 Validation (Slutty)",
+        action: (s) => { s.slutty += 1; },
+        target: "scene_maintain_act"
+      },
+      {
+        text: "Own up: “Yeah… I’m a guy. First time trying. I know it was bad.”",
+        hint: "+1 Soft",
+        action: (s) => { s.soft += 1; },
+        target: "scene_own_up"
+      }
+    ]
+  },
+
+  "scene_defensive": {
+    image: "portrait_gomez",
+    text: () => `
+      <div class="chat-stream">
+        <div class="chat-line"><span class="chat-sender sender-player">You:</span> the fuck is your problem? I was just testing something</div>
+        <div class="chat-line"><span class="chat-sender sender-gomez">Gomez:</span> sure you were. testing how fast you could get ratioed</div>
+        <div class="chat-line"><span class="chat-sender sender-player">You:</span> whatever. I don’t need a lecture</div>
+        <div class="chat-line"><span class="chat-sender sender-gomez">Gomez:</span> didn’t say you did. just said you’re bad at it</div>
+        <div class="chat-line"><span class="chat-sender sender-gomez">Gomez:</span> look, you clearly want the money or you wouldn’t have tried. I can show you how to not embarrass yourself next time. or you can keep getting clowned. up to you</div>
+      </div>
+    `,
+    choices: [
+      { text: "…Fine. Show me.", target: "scene_accept_help" }
+    ]
+  },
+
+  "scene_maintain_act": {
+    image: "portrait_gomez",
+    text: () => `
+      <div class="chat-stream">
+        <div class="chat-line"><span class="chat-sender sender-player">You:</span> omg stoppp I’m literally a girl 🥺 I just made this account</div>
+        <div class="chat-line"><span class="chat-sender sender-gomez">Gomez:</span> with a four-year-old account and a profile picture of a guy in a hoodie?</div>
+        <div class="chat-line"><span class="chat-sender sender-player">You:</span> that was my brother’s…</div>
+        <div class="chat-line"><span class="chat-sender sender-gomez">Gomez:</span> lol. you’re cute when you try. but you’re still terrible</div>
+        <div class="chat-line"><span class="chat-sender sender-gomez">Gomez:</span> if you actually want to learn how to not suck at this, I can show you. last chance</div>
+      </div>
+    `,
+    choices: [
+      { text: "Okay… teach me.", target: "scene_accept_help" }
+    ]
+  },
+
+  "scene_own_up": {
+    image: "portrait_gomez",
+    text: () => `
+      <div class="chat-stream">
+        <div class="chat-line"><span class="chat-sender sender-player">You:</span> yeah… I’m a guy. First time trying this. I know it was bad.</div>
+        <div class="chat-line"><span class="chat-sender sender-gomez">Gomez:</span> at least you’re honest. most people double down and look even more pathetic</div>
+        <div class="chat-line"><span class="chat-sender sender-gomez">Gomez:</span> you actually want to get better at it?</div>
+      </div>
+    `,
+    choices: [
+      { text: "Yeah. I do.", target: "scene_accept_help" }
+    ]
+  },
+
+  "scene_accept_help": {
+    image: "portrait_gomez",
+    text: () => `
+      <div class="chat-stream">
+        <div class="chat-line"><span class="chat-sender sender-gomez">Gomez:</span> alright. first rule: never use your real account again</div>
+        <div class="chat-line"><span class="chat-sender sender-gomez">Gomez:</span> second rule: you need a whole new identity, not just a different username</div>
+        <div class="chat-line"><span class="chat-sender sender-gomez">Gomez:</span> here. aged 2021 account, clean history, looks legit. change the password after you log in</div>
+        <div class="chat-line"><span class="chat-sender sender-gomez">Gomez:</span> now pick a persona. the type of girl you pretend to be decides what kind of guys you’ll attract. pick your lane</div>
+      </div>
+    `,
+    choices: [
+      { text: "Dark / edgy / alt-goth (Raven): Aloof, sarcastic, melancholic.", target: "scene_persona_goth" },
+      { text: "Soft / feminine / preppy (Lily): Dainty, sweet, oversized sweaters, shy.", target: "scene_persona_soft" },
+      { text: "Loud / bratty / e-girl (Neko): Chaotic gamer, teasing cruelty, energetic.", target: "scene_persona_egirl" }
+    ]
+  },
+
+  "scene_persona_goth": {
+    image: "portrait_fem_goth",
+    text: () => `
+      <p><strong>Gomez:</strong> “Dark it is. Alt, goth, a little mean, a little mysterious. Guys who like that type usually have money and serious issues.”</p>
+    `,
+    inputs: (state, container) => {
+      state.personaType = "goth";
+      const panel = document.createElement("div");
+      panel.className = "input-panel";
+      panel.innerHTML = `
+        <label>Account Username:</label>
+        <input type="text" id="acc-name" value="vesper_veil">
+        <label>Persona Name (What the guys call you):</label>
+        <input type="text" id="per-name" value="Raven">
+      `;
+      container.appendChild(panel);
+    },
+    choices: [
+      {
+        text: "Lock in Goth Persona.",
+        action: (s) => {
+          s.accountName = document.getElementById("acc-name").value.trim() || "vesper_veil";
+          s.personaName = document.getElementById("per-name").value.trim() || "Raven";
+          s.dominant += 2;
+          s.femStage = 1;
+        },
+        target: "scene_confirm_persona"
+      }
+    ]
+  },
+
+  "scene_persona_soft": {
+    image: "portrait_fem_soft",
+    text: () => `
+      <p><strong>Gomez:</strong> “Soft and sweet. Preppy, feminine, a little shy. This one pulls lonely nice guys and the ones who want a genuine girlfriend experience.”</p>
+    `,
+    inputs: (state, container) => {
+      state.personaType = "soft";
+      const panel = document.createElement("div");
+      panel.className = "input-panel";
+      panel.innerHTML = `
+        <label>Account Username:</label>
+        <input type="text" id="acc-name" value="chloe_blush">
+        <label>Persona Name (What the guys call you):</label>
+        <input type="text" id="per-name" value="Lily">
+      `;
+      container.appendChild(panel);
+    },
+    choices: [
+      {
+        text: "Lock in Soft Persona.",
+        action: (s) => {
+          s.accountName = document.getElementById("acc-name").value.trim() || "chloe_blush";
+          s.personaName = document.getElementById("per-name").value.trim() || "Lily";
+          s.soft += 3;
+          s.femStage = 1;
+        },
+        target: "scene_confirm_persona"
+      }
+    ]
+  },
+
+  "scene_persona_egirl": {
+    image: "portrait_fem_egirl",
+    text: () => `
+      <p><strong>Gomez:</strong> “Classic e-girl. Loud, bratty, teasing, a little slutty. This is the fastest route for milking simps if you can keep the chaos going.”</p>
+    `,
+    inputs: (state, container) => {
+      state.personaType = "egirl";
+      const panel = document.createElement("div");
+      panel.className = "input-panel";
+      panel.innerHTML = `
+        <label>Account Username:</label>
+        <input type="text" id="acc-name" value="mimi_bites">
+        <label>Persona Name (What the guys call you):</label>
+        <input type="text" id="per-name" value="Neko">
+      `;
+      container.appendChild(panel);
+    },
+    choices: [
+      {
+        text: "Lock in E-Girl Persona.",
+        action: (s) => {
+          s.accountName = document.getElementById("acc-name").value.trim() || "mimi_bites";
+          s.personaName = document.getElementById("per-name").value.trim() || "Neko";
+          s.slutty += 2;
+          s.dominant += 1;
+          s.femStage = 1;
+        },
+        target: "scene_confirm_persona"
+      }
+    ]
+  },
+
+  "scene_confirm_persona": {
+    image: "bg_discord_night",
+    text: (s) => `
+      <p>You finish setting up the account credentials.</p>
+      <p><strong>Account Handle:</strong> @${s.accountName}<br>
+      <strong>Persona Name:</strong> ${s.personaName}<br>
+      <strong>Vibe:</strong> ${s.personaType.toUpperCase()}</p>
+      <div class="chat-stream">
+        <div class="chat-line"><span class="chat-sender sender-gomez">Gomez:</span> good. change the pfp, write a short bio matching the vibe, and don’t type a single letter that sounds like a guy</div>
+        <div class="chat-line"><span class="chat-sender sender-gomez">Gomez:</span> when you’re ready, I’ll show you where to actually begin training</div>
+      </div>
+    `,
+    choices: [
+      { text: "I’m ready.", target: "scene_first_lesson" }
+    ]
+  },
+
+  // ----------------- TRAINING MONTAGE (DAYS 1-3) -----------------
+  "scene_first_lesson": {
+    image: "item_desk_glow",
+    text: (s) => {
+      let archetypeText = "";
+      if (s.personaType === "goth") {
+        archetypeText = "The messages are lowercase, aloof, cynical, using trailing dots (...) and cold dismissive reactions that leave men starving for approval.";
+      } else if (s.personaType === "soft") {
+        archetypeText = "The messages are gentle, full of shy pauses, blushing emojis, soft keymashes, and delicate 'hehe' giggles.";
+      } else {
+        archetypeText = "The messages are chaotic, packed with slang, exclamation marks, teasing insults, and high-energy memes.";
+      }
+
+      return `
+        <div class="chat-stream">
+          <div class="chat-line"><span class="chat-sender sender-gomez">Gomez:</span> before you join real servers, you need to unlearn typing like a dude</div>
+          <div class="chat-line"><span class="chat-sender sender-gomez">Gomez:</span> I’m sending example chat logs matching ${s.personaName}'s archetype. study them. then we practice</div>
+        </div>
+        <p>You read through the screenshots he sends.</p>
+        <p>${archetypeText}</p>
+        <p>Some of the phrasing feels foreign in your mind, but you practice typing them out silently.</p>
+        <p><strong>Gomez:</strong> “Meet me in this anonymous chat room in an hour. We start live testing.”</p>
+      `;
+    },
+    choices: [
+      { text: "Start practicing.", target: "scene_day1_practice" }
+    ]
+  },
+
+  "scene_day1_practice": {
+    image: "bg_discord_night",
+    text: (s) => `
+      <p><strong>Day 1 — Late Night</strong></p>
+      <p>The anonymous room is half-full. Random usernames drifting across the feed. You log in as <strong>${s.personaName}</strong> for the first time and feel ridiculous.</p>
+      <p>You type your first message carefully:</p>
+      <div class="chat-stream">
+        <div class="chat-line"><span class="chat-sender sender-player">${s.personaName}:</span> hey</div>
+        <div class="chat-line"><span class="chat-sender sender-stranger">Stranger_42:</span> hey cutie, what you doing up?</div>
+        <div class="chat-line"><span class="chat-sender sender-player">${s.personaName}:</span> just couldn’t sleep haha</div>
+        <div class="chat-line"><span class="chat-sender sender-stranger">Stranger_42:</span> same. you got a discord or something?</div>
+        <div class="chat-line"><span class="chat-sender sender-stranger">OtherGuy:</span> bro this is obviously a guy lmfao look at the typing</div>
+      </div>
+      <p>Your stomach drops. In private DMs, Gomez is already typing.</p>
+      <div class="chat-stream">
+        <div class="chat-line"><span class="chat-sender sender-gomez">Gomez:</span> you sounded like a dude the second you said 'haha'</div>
+        <div class="chat-line"><span class="chat-sender sender-gomez">Gomez:</span> girls who use that archetype don't type like that. try again, and stop thinking so hard</div>
+      </div>
+    `,
+    choices: [
+      { text: "Continue into Day 2.", target: "scene_day2_practice" }
+    ]
+  },
+
+  "scene_day2_practice": {
+    image: "bg_discord_night",
+    text: (s) => {
+      const response = s.personaType === "goth" ? "depends if you’re interesting enough" : s.personaType === "soft" ? "maybe… if you’re nice hehe 🥺" : "omg only if you earn it 😌";
+      return `
+        <p><strong>Day 2</strong></p>
+        <p>You spend the afternoon rereading Gomez’s reference logs. You notice the cadence—how long girls wait before replying, how they deploy trailing periods, how they handle pushy guys.</p>
+        <p>When you enter the anonymous room that night, someone flirts with you early:</p>
+        <div class="chat-stream">
+          <div class="chat-line"><span class="chat-sender sender-stranger">GamerGuy:</span> you sound cute. you got a face reveal or is this one of those voice-only things?</div>
+        </div>
+        <p>Your natural instinct is to get awkward. Instead, a response surfaces that belongs entirely to <strong>${s.personaName}</strong>:</p>
+        <div class="chat-stream">
+          <div class="chat-line"><span class="chat-sender sender-player">${s.personaName}:</span> ${response}</div>
+        </div>
+        <p>He keeps talking. For twenty minutes, no one calls you out. You answer faster, with less hesitation.</p>
+        <p class="internal-thought">Later, staring at your ceiling, you notice your own thoughts taking on that exact same cadence. Just for a second. Then it fades.</p>
+      `;
+    },
+    choices: [
+      { text: "Continue into Day 3.", target: "scene_day3_practice" }
+    ]
+  },
+
+  "scene_day3_practice": {
+    image: "bg_discord_night",
+    text: (s) => {
+      const response = s.personaType === "goth" ? "then stop talking to me" : s.personaType === "soft" ? "aww that’s kinda mean :/" : "cry about it then 💕";
+      return `
+        <p><strong>Day 3</strong></p>
+        <p>By the third night, the nervousness has turned into a quiet hum.</p>
+        <p>You join the room and chat effortlessly with a lonely guy talking about his dead-end job. When another user jumps in with <em>'idk this feels off'</em>, you shut him down instantly:</p>
+        <div class="chat-stream">
+          <div class="chat-line"><span class="chat-sender sender-player">${s.personaName}:</span> ${response}</div>
+        </div>
+        <p>The skeptic goes silent. The first guy keeps messaging you like nothing happened.</p>
+        <div class="chat-stream">
+          <div class="chat-line"><span class="chat-sender sender-gomez">Gomez:</span> that was clean. you didn’t break character once</div>
+          <div class="chat-line"><span class="chat-sender sender-gomez">Gomez:</span> tomorrow we start for real</div>
+        </div>
+      `;
+    },
+    choices: [
+      { text: "I’m ready.", target: "scene_first_hunt" }
+    ]
+  },
+
+  // ----------------- FIRST HUNT & EARLY REPUTATION -----------------
+  "scene_first_hunt": {
+    image: "bg_discord_night",
+    text: (s) => `
+      <p><strong>Gomez:</strong> “I’m dropping you three server links. Mid-sized, active at night, places where lonely guys actually talk.”</p>
+      <div class="chat-stream">
+        <div class="chat-line"><span class="chat-sender sender-gomez">Gomez:</span> rule for now: DO NOT SELL ANYTHING</div>
+        <div class="chat-line"><span class="chat-sender sender-gomez">Gomez:</span> no sleep calls, no CashApp, no links. just exist. get people used to seeing ${s.personaName} around. reputation comes first</div>
+      </div>
+      <p>You join the primary server: <em>The Neon Lounge</em>. Main chat is scrolling with people sharing memes and complaining about work.</p>
+    `,
+    choices: [
+      {
+        text: "Post your first greeting into general chat.",
+        action: (s) => { s.rep = 0; },
+        target: "scene_early_chatting"
+      }
+    ]
+  },
+
+  "scene_early_chatting": {
+    image: "bg_discord_night",
+    text: (s) => `
+      <p>The first few exchanges are careful. A guy named Marcus starts talking with you more than the others.</p>
+      <div class="chat-stream">
+        <div class="chat-line"><span class="chat-sender sender-stranger">Marcus:</span> you’re new here right?</div>
+        <div class="chat-line"><span class="chat-sender sender-player">${s.personaName}:</span> yeah… just joined tonight</div>
+        <div class="chat-line"><span class="chat-sender sender-stranger">Marcus:</span> cool. you seem nice. most people here are either silent or weird as hell</div>
+        <div class="chat-line"><span class="chat-sender sender-stranger">Marcus:</span> ngl you have a really nice energy. it’s easy to talk to you</div>
+      </div>
+      <p class="internal-thought">Something warm and unfamiliar settles in your chest. You like that he said it. You like that he’s trying to keep the conversation alive with this girl who only exists on your screen.</p>
+      <p>In DMs, Gomez monitors your progress: <em>'good. reputation is just small positive interactions stacked on top of each other.'</em></p>
+    `,
+    choices: [
+      {
+        text: "Log off at 4:00 AM, feeling the attention hum under your skin.",
+        hint: "+1 Simp Rep",
+        action: (s) => { s.rep += 1; },
+        target: "scene_next_night"
+      }
+    ]
+  },
+
+  "scene_next_night": {
+    image: "bg_discord_night",
+    text: (s) => `
+      <p>The next night is remarkably easier.</p>
+      <p>People recognize the avatar. A couple of users type <em>'oh hey ${s.personaName}, you're back'</em>. Marcus DMs you asking about your day. Another user reacts with hearts to everything you post.</p>
+      <p>You’re still not selling anything. Just being present.</p>
+      <p class="internal-thought">You like when they get nervous. You like deciding how much attention they get. It feels better than it should.</p>
+      <p>You catch yourself smiling at a flirtatious ping before you remember to stop.</p>
+    `,
+    choices: [
+      {
+        text: "Keep building reputation over the next few days.",
+        hint: "+2 Simp Rep",
+        action: (s) => { s.rep += 2; s.day = 5; },
+        target: "scene_building_days"
+      }
+    ]
+  },
+
+  "scene_building_days": {
+    image: "item_desk_glow",
+    text: (s) => {
+      let wallpaperDesc = "";
+      if (s.personaType === "goth") {
+        wallpaperDesc = "A moody, rainy cityscape with deep charcoal tones and custom dark icons.";
+      } else if (s.personaType === "soft") {
+        wallpaperDesc = "Pastel clouds drifting over a pink twilight sky with rounded, soft icons.";
+      } else {
+        wallpaperDesc = "A vibrant neon arcade aesthetic with bubblegum purple accents.";
+      }
+
+      return `
+        <p>By Day 5, your days and nights have completely inverted.</p>
+        <p>During daylight hours, you’re still ${s.playerName}. You walk down to the corner store in your faded hoodie to buy instant ramen. You check your bank account—still bleeding dry. You ignore calls from unknown debt collectors. Everything about your real life feels grey, heavy, and exhausting.</p>
+        <p>But around 11:00 PM, when you boot up the PC, you stop being him.</p>
+        <p>You sit down, your feet naturally pulling up onto the chair cushions, knees tucked toward your chest. The desktop wallpaper is no longer default Windows; Gomez made you replace it with an aesthetic theme matching ${s.personaName}:</p>
+        <p style="padding-left:1rem; color:var(--accent-soft);">${wallpaperDesc}</p>
+        <p>Tonight, Gomez pings you to check in before your full daily routine begins.</p>
+      `;
+    },
+    choices: [
+      { text: "Open Gomez's message and begin Act 2.", target: "scene_act2_initiation" }
+    ]
+  },
+
+  "scene_act2_initiation": {
+    image: "portrait_gomez",
+    text: (s) => `
+      <div class="chat-stream">
+        <div class="chat-line"><span class="chat-sender sender-gomez">Gomez:</span> your reputation is stabilized. now the real work starts</div>
+        <div class="chat-line"><span class="chat-sender sender-gomez">Gomez:</span> from here on out, you manage your daily routine. every day you decide how to balance gaming for reputation, chatting with the servers, managing the core regulars, working on your body, and voice training</div>
+        <div class="chat-line"><span class="chat-sender sender-gomez">Gomez:</span> remember: you aren't an avatar. you are becoming the product</div>
+      </div>
+      <p class="internal-thought">The daily loop is starting. Each day brings chances to earn money, grow your reputation, and let ${s.personaName} consume more of your waking life.</p>
+    `,
+    choices: [
+      {
+        text: "Begin the daily cycle.",
+        action: (s) => { s.day = 6; s.timeOfDay = "Morning"; s.femStage = 2; },
+        target: "scene_daily_loop"
+      }
+    ]
+  },
+
+  // =========================================================================
+  // MAIN GAMEPLAY LOOP (ACT 2 DAILY CYCLE)
+  // =========================================================================
+  "scene_daily_loop": {
+    image: "item_desk_glow",
+    text: (s) => `
+      <p><strong>Day ${s.day} — ${s.timeOfDay}</strong></p>
+      <p>You sit at your desk in your cramped room. Fairy lights hang over the monitor frame, casting soft reflections onto the walls.</p>
+      <p>The screen glows with notifications, gaming lobbies, and audio software. What do you choose to do right now?</p>
+      <p class="internal-thought">${
+        s.bodyFemininity >= 50 
+        ? "Your waist feels leaner, your hips more distinct when you sit curled up like this." 
+        : "You still feel slightly boxy and male, your posture stiff in the old chair."
+      }</p>
+    `,
+    choices: [
+      {
+        text: "Play Games (Greatly boosts Simp Reputation)",
+        hint: "+15-20 Rep, Advances Time",
+        target: "action_play_games"
+      },
+      {
+        text: "Text in Discord Servers (Builds Rep & Chance of Tips)",
+        hint: "Rep + Chance of Simp Money",
+        target: "action_text_discord"
+      },
+      {
+        text: "Message Regulars (Deepen bond with Dominic, Felix, Adrian, or Gomez)",
+        hint: "Special Character Events",
+        target: "action_message_regulars"
+      },
+      {
+        text: "Voice Training (Requires Stage 2 - Increases Feminine Pitch & Ladder)",
+        hint: "Voice Feminization Progress",
+        condition: (s) => s.femStage >= 2,
+        target: "action_voice_training"
+      },
+      {
+        text: "Work Out (Feminine Routine - Builds Waist, Thighs & Curves)",
+        hint: "Body Femininity Progress",
+        target: "action_workout"
+      },
+      {
+        text: "End the day and go to sleep.",
+        hint: "Advance to Next Day",
+        target: "scene_sleep_transition"
+      }
+    ]
+  },
+
+  // --- ACTIVITY: PLAY GAMES ---
+  "action_play_games": {
+    image: "bg_discord_night",
+    text: (s) => {
+      let flavor = "";
+      if (s.personaType === "goth") {
+        flavor = "You queue into competitive lobbies under @${s.accountName}. You play cold and lethal, rarely speaking in game chat, letting your stats and dark profile banner do the talking. The lobby fills with messages asking if you're single.";
+      } else if (s.personaType === "soft") {
+        flavor = "You queue as a cute support character. Two high-ranking players fight each other for the privilege of protecting your character and dropping you rare weapon skins. Every time you type a shy 'ty :3' in party chat, they play twice as hard.";
+      } else {
+        flavor = "You drop in with aggressive, chaotic energy. You trash-talk enemy squads and spam cute animated emotes over defeated players. Your team chat erupts into cheers every time you clutch a round.";
+      }
+
+      return `
+        <p>${flavor.replace("${s.accountName}", s.accountName)}</p>
+        <p>By the time the session wraps up three hours later, your friend requests have jumped by double digits and your server profile has dozens of new profile views.</p>
+        <p class="internal-thought">Being recognized as a girl in the lobby feels effortless and thrilling. You don't have to fight for respect; they shower you with it.</p>
+      `;
+    },
+    choices: [
+      {
+        text: "Wrap up the gaming session.",
+        hint: "+18 Simp Rep",
+        action: (s) => {
+          s.rep += 18;
+          Engine.advanceTime();
+        },
+        target: "scene_daily_loop"
+      }
+    ]
+  },
+
+  // --- ACTIVITY: TEXT IN DISCORD SERVERS ---
+  "action_text_discord": {
+    image: "bg_discord_night",
+    text: (s) => `
+      <p>You hop into the public channels of <em>The Neon Lounge</em> and scroll through the banter.</p>
+      <p>You drop a couple of casual thoughts, react to memes, and let your persona's typing quirks take center stage.</p>
+      <p>How do you want to interact with the server right now?</p>
+    `,
+    choices: [
+      {
+        text: "Casual Text Banter (Standard chat interaction)",
+        hint: "+6 Rep, Chance of random cash",
+        action: (s) => {
+          s.rep += 6;
+          // Random simp encounter
+          const roll = Math.random();
+          if (roll > 0.4) {
+            const tip = Math.floor(Math.random() * 25) + 15;
+            s.money += tip;
+            s.lastTip = tip;
+            s.lastTipType = "text";
+          } else {
+            s.lastTip = 0;
+          }
+          Engine.advanceTime();
+        },
+        target: "action_text_discord_result"
+      },
+      {
+        text: "Send a Breathy Voice Note into VIP Chat (Unlocked via Voice Ladder)",
+        hint: "Greatly Boosts Rep & Guaranteed High Tips",
+        condition: (s) => s.voiceLadder >= 2,
+        action: (s) => {
+          s.rep += 20;
+          const tip = Math.floor(Math.random() * 40) + 40;
+          s.money += tip;
+          s.lastTip = tip;
+          s.lastTipType = "voice";
+          s.slutty += 2;
+          Engine.advanceTime();
+        },
+        target: "action_text_discord_voice_result"
+      }
+    ]
+  },
+
+  "action_text_discord_result": {
+    image: "bg_discord_night",
+    text: (s) => {
+      let tipHtml = "";
+      if (s.lastTip > 0) {
+        tipHtml = `
+          <div class="chat-stream">
+            <div class="chat-line"><span class="chat-sender sender-stranger">RandomSimp_99:</span> [CashApp: +$${s.lastTip}.00] hey ${s.personaName}, buy yourself a boba tea today cutie 💕</div>
+          </div>
+          <p>A random server member sent you $${s.lastTip} out of the blue just because you replied to his message with an emoji.</p>
+        `;
+      } else {
+        tipHtml = `<p>Chat was lively. A few guys complimented your avatar and added hearts to your messages, building your presence in the community.</p>`;
+      }
+      return `
+        ${tipHtml}
+        <p class="internal-thought">Every hour you spend here makes your real life feel further and further away.</p>
+      `;
+    },
+    choices: [
+      { text: "Return to your desk.", target: "scene_daily_loop" }
+    ]
+  },
+
+  "action_text_discord_voice_result": {
+    image: "item_pitch_graph",
+    text: (s) => `
+      <p>You lean into the microphone, soften your breath into the upper register, and record a 4-second audio note:</p>
+      <div class="chat-stream">
+        <div class="chat-line">
+          <span class="chat-sender sender-player">${s.personaName}:</span>
+          <div class="audio-bubble">
+            <span class="audio-play-icon">▶</span> [Voice Note: 0:04 — <i>"hope everyone is having a cozy evening tonight~ 💕"</i>]
+          </div>
+        </div>
+        <div class="chat-line"><span class="chat-sender sender-kev">xX_Kev_Sniper_Xx:</span> [CashApp: +$${s.lastTip}.00] YOUR VOICE IS INSANE OMG</div>
+        <div class="chat-line"><span class="chat-sender sender-stranger">Ghosty:</span> <span style="color:#f472b6;">♥♥♥</span> (reacted to your voice note)</div>
+      </div>
+      <p>The channel goes feral. A four-second audio snippet netted you <strong>$${s.lastTip}</strong> in direct tribute and sent your reputation soaring.</p>
+    `,
+    choices: [
+      { text: "Return to your desk.", target: "scene_daily_loop" }
+    ]
+  },
+
+  // --- ACTIVITY: MESSAGE REGULARS (CORE 4) ---
+  "action_message_regulars": {
+    image: "item_desk_glow",
+    text: (s) => `
+      <p>Who do you want to reach out to privately tonight?</p>
+      <p>Each of the four men has distinct needs, dynamic route thresholds, and special interactions that advance your feminization.</p>
+    `,
+    choices: [
+      {
+        text: "Dominic (Sugar Daddy / High-End Authority)",
+        hint: `Affection: ${S.dominicPoints} | Special Events Available`,
+        target: "event_dominic"
+      },
+      {
+        text: "Felix (Submissive Findom / Chastity)",
+        hint: `Affection: ${S.felixPoints} | Special Events Available`,
+        target: "event_felix"
+      },
+      {
+        text: "Adrian (Emotional Romance / Wholesome)",
+        hint: `Affection: ${S.adrianPoints} | Special Events Available`,
+        target: "event_adrian"
+      },
+      {
+        text: "Gomez (The Architect / Coaching & Strategy)",
+        hint: `Affection: ${S.gomezPoints} | Next Step Guidance`,
+        target: "event_gomez"
+      },
+      {
+        text: "Back to activities.",
+        target: "scene_daily_loop"
+      }
+    ]
+  },
+
+  // --- DOMINIC EVENTS ---
+  "event_dominic": {
+    image: "portrait_dominic",
+    text: (s) => {
+      if (s.dominicStep === 0) {
+        return `
+          <div class="chat-stream">
+            <div class="chat-line"><span class="chat-sender sender-dominic">Dominic_V:</span> Good evening, ${s.personaName}. I expect you've been taking care of your posture.</div>
+            <div class="chat-line"><span class="chat-sender sender-dominic">Dominic_V:</span> I don't tolerate sloppiness in women I spoil. Here is $100 for your weekly expenses. Ensure your nails are clean.</div>
+          </div>
+          <p class="internal-thought">His authoritative tone makes your breath catch. He talks to you like a possession, and a dark part of you loves it.</p>
+        `;
+      } else if (s.dominicStep === 1) {
+        return `
+          <div class="chat-stream">
+            <div class="chat-line"><span class="chat-sender sender-dominic">Dominic_V:</span> I have a task for you tonight, ${s.personaName}.</div>
+            <div class="chat-line"><span class="chat-sender sender-dominic">Dominic_V:</span> A man in my position needs to know if the girl he's investing in knows how to treat male anatomy with respect.</div>
+            <div class="chat-line"><span class="chat-sender sender-dominic">Dominic_V:</span> [IMAGE: Private Attachment - Clean, heavy, older male shaft resting against silk sheets]</div>
+            <div class="chat-line"><span class="chat-sender sender-dominic">Dominic_V:</span> Give me a clinical, respectful rating. No vulgarity. Tell me what a girl like you thinks of it.</div>
+          </div>
+          <p class="internal-thought">Your eyes widen at the photo. You swallow hard, your fingers hovering over the keys.</p>
+        `;
+      } else {
+        return `
+          <div class="chat-stream">
+            <div class="chat-line"><span class="chat-sender sender-dominic">Dominic_V:</span> My executive retreat is coming up next month in your city, ${s.personaName}.</div>
+            <div class="chat-line"><span class="chat-sender sender-dominic">Dominic_V:</span> Here is $250. Go shopping for a proper dress and heels. When you meet me at the hotel lounge, you will look like a lady on my arm.</div>
+          </div>
+          <p class="internal-thought">He's paying for you to physically transition into his high-end companion.</p>
+        `;
+      }
+    },
+    choices: [
+      {
+        text: "Acknowledge Dominic obediently.",
+        condition: (s) => s.dominicStep === 0,
+        hint: "+2 Dominic, +1 Soft, +$100 Money",
+        action: (s) => {
+          s.dominicPoints += 2;
+          s.soft += 1;
+          s.money += 100;
+          s.dominicStep = 1;
+          Engine.advanceTime();
+        },
+        target: "scene_daily_loop"
+      },
+      {
+        text: "Submit respectful, flattering dick rating: “It looks powerful and sophisticated, sir… perfect for someone like you 🖤”",
+        condition: (s) => s.dominicStep === 1,
+        hint: "+4 Dominic, +3 Validation (Slutty), +$150 Money",
+        action: (s) => {
+          s.dominicPoints += 4;
+          s.slutty += 3;
+          s.money += 150;
+          s.dominicStep = 2;
+          Engine.advanceTime();
+        },
+        target: "scene_daily_loop"
+      },
+      {
+        text: "Accept the $250 wardrobe funds and promise to be ready.",
+        condition: (s) => s.dominicStep >= 2,
+        hint: "+4 Dominic, +$250 Money, Visual Disguise Unlocked",
+        action: (s) => {
+          s.dominicPoints += 3;
+          s.money += 250;
+          s.visualLadder = Math.max(s.visualLadder, 2);
+          Engine.advanceTime();
+        },
+        target: "scene_daily_loop"
+      }
+    ]
+  },
+
+  // --- FELIX EVENTS ---
+  "event_felix": {
+    image: "portrait_felix",
+    text: (s) => {
+      if (s.felixStep === 0) {
+        return `
+          <div class="chat-stream">
+            <div class="chat-line"><span class="chat-sender sender-felix">felix_k:</span> Mistress ${s.personaName}… thank you for letting me message you…</div>
+            <div class="chat-line"><span class="chat-sender sender-felix">felix_k:</span> here is $40 for your coffee fund. please tell me i was a good boy today…</div>
+          </div>
+          <p class="internal-thought">He worships you. The more distant and commanding you are, the more desperately he clings.</p>
+        `;
+      } else if (s.felixStep === 1) {
+        return `
+          <div class="chat-stream">
+            <div class="chat-line"><span class="chat-sender sender-felix">felix_k:</span> Mistress… i'm trembling typing this…</div>
+            <div class="chat-line"><span class="chat-sender sender-felix">felix_k:</span> i've been locked in chastity for 48 hours. could you… could you send me a voice note commanding me? a JOI countdown? tell me when i'm allowed to touch myself… i sent $75 tribute…</div>
+          </div>
+          <p class="internal-thought">He wants you to control his orgasm completely through your voice.</p>
+        `;
+      } else {
+        return `
+          <div class="chat-stream">
+            <div class="chat-line"><span class="chat-sender sender-felix">felix_k:</span> Mistress ${s.personaName}… my weekly direct deposit arrived. $180 tribute sent.</div>
+            <div class="chat-line"><span class="chat-sender sender-felix">felix_k:</span> please command me to buy your next wishlist item… i want to be ruined by you…</div>
+          </div>
+          <p class="internal-thought">You hold his bank account and his pleasure in the palm of your hand.</p>
+        `;
+      }
+    },
+    choices: [
+      {
+        text: "Praise him coldly: “Good boy, Felix. Keep sending tribute.”",
+        condition: (s) => s.felixStep === 0,
+        hint: "+2 Felix, +2 Dominant, +$40 Money",
+        action: (s) => {
+          s.felixPoints += 2;
+          s.dominant += 2;
+          s.money += 40;
+          s.felixStep = 1;
+          Engine.advanceTime();
+        },
+        target: "scene_daily_loop"
+      },
+      {
+        text: "Send a breathy, strict voice command controlling his countdown.",
+        condition: (s) => s.felixStep === 1,
+        hint: "+4 Felix, +3 Dominant, +2 Validation, +$75 Money",
+        action: (s) => {
+          s.felixPoints += 4;
+          s.dominant += 3;
+          s.slutty += 2;
+          s.money += 75;
+          s.felixStep = 2;
+          Engine.advanceTime();
+        },
+        target: "scene_daily_loop"
+      },
+      {
+        text: "Order him to forward his allowance: “Be quiet and send the tribute, pet.”",
+        condition: (s) => s.felixStep >= 2,
+        hint: "+3 Felix, +3 Dominant, +$180 Money",
+        action: (s) => {
+          s.felixPoints += 3;
+          s.dominant += 3;
+          s.money += 180;
+          Engine.advanceTime();
+        },
+        target: "scene_daily_loop"
+      }
+    ]
+  },
+
+  // --- ADRIAN EVENTS ---
+  "event_adrian": {
+    image: "portrait_adrian",
+    text: (s) => {
+      if (s.adrianStep === 0) {
+        return `
+          <div class="chat-stream">
+            <div class="chat-line"><span class="chat-sender sender-adrian">adrian_codes:</span> Hey ${s.personaName}! I saw you were active in the server.</div>
+            <div class="chat-line"><span class="chat-sender sender-adrian">adrian_codes:</span> I was working on that indie game shader I told you about. Thought maybe we could chill in a private call while I work? No pressure at all!</div>
+          </div>
+          <p class="internal-thought">There's no kink or manipulation here. Just genuine, wholesome affection. It makes your chest ache with sweet guilt.</p>
+        `;
+      } else if (s.adrianStep === 1) {
+        return `
+          <div class="chat-stream">
+            <div class="chat-line"><span class="chat-sender sender-adrian">adrian_codes:</span> Hey… you up?</div>
+            <div class="chat-line"><span class="chat-sender sender-adrian">adrian_codes:</span> I tuned my acoustic guitar tonight. I know you said you had a stressful week, so I learned that indie ballad you like. Can I play it for you on voice?</div>
+          </div>
+          <p class="internal-thought">He learned a whole song on guitar just to comfort you.</p>
+        `;
+      } else {
+        return `
+          <div class="chat-stream">
+            <div class="chat-line"><span class="chat-sender sender-adrian">adrian_codes:</span> ${s.personaName}… I know we've never met in person, but you're honestly the most special girl I've ever spoken to.</div>
+            <div class="chat-line"><span class="chat-sender sender-adrian">adrian_codes:</span> I saved up for a flight to visit you whenever you're ready. I want to take you on a real date. No screens. Just you and me.</div>
+          </div>
+          <p class="internal-thought">He wants you in real life. If you want this love, ${s.personaName} has to become your physical reality.</p>
+        `;
+      }
+    },
+    choices: [
+      {
+        text: "Join his call and keep him company.",
+        condition: (s) => s.adrianStep === 0,
+        hint: "+3 Adrian, +2 Soft",
+        action: (s) => {
+          s.adrianPoints += 3;
+          s.soft += 2;
+          s.adrianStep = 1;
+          Engine.advanceTime();
+        },
+        target: "scene_daily_loop"
+      },
+      {
+        text: "Listen to Adrian play guitar and sing softly over the call.",
+        condition: (s) => s.adrianStep === 1,
+        hint: "+4 Adrian, +4 Soft",
+        action: (s) => {
+          s.adrianPoints += 4;
+          s.soft += 4;
+          s.adrianStep = 2;
+          Engine.advanceTime();
+        },
+        target: "scene_daily_loop"
+      },
+      {
+        text: "Whisper back emotionally: “Adrian… I want that more than you know.”",
+        condition: (s) => s.adrianStep >= 2,
+        hint: "+4 Adrian, Deep Romance Locked",
+        action: (s) => {
+          s.adrianPoints += 4;
+          s.soft += 3;
+          Engine.advanceTime();
+        },
+        target: "scene_daily_loop"
+      }
+    ]
+  },
+
+  // --- GOMEZ EVENTS ---
+  "event_gomez": {
+    image: "portrait_gomez",
+    text: (s) => {
+      return `
+        <div class="chat-stream">
+          <div class="chat-line"><span class="chat-sender sender-gomez">Gomez:</span> let's review your numbers, kid.</div>
+          <div class="chat-line"><span class="chat-sender sender-gomez">Gomez:</span> Simp Rep is sitting at ${s.rep}. Body Femininity: ${s.bodyFemininity}%. Voice Ladder: ${s.voiceLadder}.</div>
+          <div class="chat-line"><span class="chat-sender sender-gomez">Gomez:</span> keep training your voice and hitting glute/waist workouts. once your body reaches 50%, you'll look convincing in skirts and bodycon dresses without hiding behind baggy hoodies.</div>
+          <div class="chat-line"><span class="chat-sender sender-gomez">Gomez:</span> Dominic wants an escort, Felix wants a goddess, Adrian wants a girlfriend, and I want a streamer empire. do not slack off.</div>
+        </div>
+        <p class="internal-thought">Gomez is the architect of your transformation. Every piece is falling into place.</p>
+      `;
+    },
+    choices: [
+      {
+        text: "Thank Gomez for the strategic breakdown.",
+        hint: "+2 Gomez",
+        action: (s) => {
+          s.gomezPoints += 2;
+          Engine.advanceTime();
+        },
+        target: "scene_daily_loop"
+      }
+    ]
+  },
+
+  // --- ACTIVITY: VOICE TRAINING ---
+  "action_voice_training": {
+    image: "item_pitch_graph",
+    text: (s) => `
+      <p>You pull up the vocal spectrum analyzer on your monitor.</p>
+      <p>Target pitch: <strong>210 Hz to 240 Hz</strong>. Gomez left exercise files: vocal sirens, panting drills to raise the larynx, softening plosive consonants, and breathy resonance practice.</p>
+      <p>Current Voice Progress: <strong>${s.voiceProgress}%</strong> (Ladder Level: ${s.voiceLadder})</p>
+      <p class="internal-thought">You take a sip of warm water, press your fingers to your throat to feel the larynx elevate, and begin your vocal drills.</p>
+    `,
+    choices: [
+      {
+        text: "Practice breathy pitch drills for forty minutes.",
+        hint: "+15 Voice Progress, +1 Soft",
+        action: (s) => {
+          s.voiceProgress += 15;
+          s.soft += 1;
+          if (s.voiceProgress >= 25 && s.voiceLadder < 2) s.voiceLadder = 2;
+          if (s.voiceProgress >= 60 && s.voiceLadder < 3) s.voiceLadder = 3;
+          if (s.voiceProgress >= 90 && s.voiceLadder < 4) s.voiceLadder = 4;
+          Engine.advanceTime();
+        },
+        target: "action_voice_training_result"
+      }
+    ]
+  },
+
+  "action_voice_training_result": {
+    image: "item_pitch_graph",
+    text: (s) => `
+      <p>You speak test sentences into the mic, listening to your headphones.</p>
+      <p><em>“thank you for spoiling me today… goodnight~”</em></p>
+      <p>Your voice is settling into a natural, breathy feminine lilt. It takes less conscious effort now; the larynx stays elevated on its own for minutes at a time.</p>
+      <p>Voice Progress is now at <strong>${s.voiceProgress}%</strong> (Ladder Level: ${s.voiceLadder}).</p>
+    `,
+    choices: [
+      { text: "Return to your desk.", target: "scene_daily_loop" }
+    ]
+  },
+
+  // --- ACTIVITY: WORK OUT ---
+  "action_workout": {
+    image: "item_workout_mat",
+    text: (s) => {
+      let thresholdStatus = "";
+      if (s.bodyFemininity < 25) {
+        thresholdStatus = "Your silhouette is still noticeably male—broad shoulders, narrow hips, flat glutes. You need more lower-body mass to pull off tight clothes.";
+      } else if (s.bodyFemininity < 55) {
+        thresholdStatus = "Your waist is narrowing and your thighs are softer. You look convincing in oversized knit sweaters and high-waisted thigh-highs.";
+      } else if (s.bodyFemininity < 80) {
+        thresholdStatus = "Significant curve development. Your hip-to-waist ratio is noticeably feminine. You can convincingly wear pleated skirts, chokers, and waist cinchers without suspicion.";
+      } else {
+        thresholdStatus = "Stunning feminine physique: slender soft waist, full curved hips and thighs, delicate collarbones. You look completely natural in lingerie and bodycon dresses.";
+      }
+
+      return `
+        <p>You roll out the yoga mat on your bedroom floor.</p>
+        <p>Gomez’s physical conditioning guide is open on your phone: resistance band glute bridges, donkey kicks, high-rep squats, stomach vacuums for a tapered waist, and posture alignment.</p>
+        <p><strong>Current Body Femininity:</strong> ${s.bodyFemininity} / 100</p>
+        <p style="padding-left:1rem; color:var(--accent-soft);">${thresholdStatus}</p>
+      `;
+    },
+    choices: [
+      {
+        text: "Complete the targeted waist-cinching and glute workout.",
+        hint: "+12 Body Femininity, +1 Slutty",
+        action: (s) => {
+          s.bodyFemininity = Math.min(100, s.bodyFemininity + 12);
+          s.slutty += 1;
+          Engine.advanceTime();
+        },
+        target: "action_workout_result"
+      }
+    ]
+  },
+
+  "action_workout_result": {
+    image: "item_workout_mat",
+    text: (s) => `
+      <p>You wipe the sweat from your forehead, panting on the mat.</p>
+      <p>Your thighs and glutes burn with tight, satisfying soreness. You stand up in front of the full-length mirror and run your hands over your waist.</p>
+      <p class="internal-thought">The muscles along your hips are shaping differently. The stomach vacuums are pulling your core inward. Staring at your reflection, the masculine frame is slowly melting away.</p>
+    `,
+    choices: [
+      { text: "Return to your desk.", target: "scene_daily_loop" }
+    ]
+  },
+
+  // --- SLEEP / ADVANCE DAY ---
+  "scene_sleep_transition": {
+    image: "bg_stage2_feminized",
+    text: (s) => `
+      <p>You slip into your bed under the warm violet fairy lights. The soft lavender plush cat rests against your chest.</p>
+      <p>You pull the blanket up to your chin, listening to the quiet hum of your PC idling across the room.</p>
+      <p class="internal-thought">Another day spent slipping deeper into ${s.personaName}'s skin. When you close your eyes, you don't dream of pizza boxes or unpaid bills. You dream of soft fabrics, praising whispers, and the intoxicating sensation of being wanted.</p>
+    `,
+    choices: [
+      {
+        text: "Drift off to sleep…",
+        hint: "Advance to Next Morning",
+        action: (s) => {
+          s.day += 1;
+          s.timeOfDay = "Morning";
+        },
+        target: "scene_daily_loop"
+      }
+    ]
+  }
+};
+
+/* =========================================================================
+   CYCLE HELPER FUNCTION
+   ========================================================================= */
+Engine.advanceTime = function() {
+  if (S.timeOfDay === "Morning") {
+    S.timeOfDay = "Afternoon";
+  } else if (S.timeOfDay === "Afternoon") {
+    S.timeOfDay = "Night";
+  } else {
+    // If it's already night, advance day on next sleep
+    S.timeOfDay = "Late Night";
+  }
+};
+
+/* =========================================================================
+   INITIALIZATION
+   ========================================================================= */
+window.addEventListener("DOMContentLoaded", () => {
+  const saved = localStorage.getItem("catfishing_custom_save");
+  if (saved) {
+    try {
+      S = JSON.parse(saved);
+      Engine.goTo(S.currentScene || "scene_start");
+      return;
+    } catch (e) {
+      console.error("Auto-load failed", e);
+    }
+  }
+  Engine.goTo("scene_start");
+});
+</script>
+</body>
+</html>
