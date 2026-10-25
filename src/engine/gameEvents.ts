@@ -1,5 +1,5 @@
 import { GameState, EventResult } from '../types/game';
-import { getSkinById } from '../data/skins';
+import { getSkinById, getAllSkins } from '../data/skins';
 
 /**
  * Helper to generate random integers inclusive of min and max.
@@ -28,6 +28,7 @@ export function generateGamingEvent(state: GameState, randomFn = Math.random): E
     narrative: string;
     chatLogs: Array<{ sender: string; senderClass?: string; message: string }>;
     involvedRegular?: 'dominic' | 'felix' | 'adrian' | 'gomez';
+    giftedSkinId?: string;
   }> = [
     {
       title: 'The Overprotective Squad Carry',
@@ -187,6 +188,23 @@ export function generateGamingEvent(state: GameState, randomFn = Math.random): E
         { sender: `${personaName}`, senderClass: 'sender-player', message: `i-i just got lucky i promise!! my hands are shaking so bad 🙈` }
       ]
     });
+    events.push({
+      title: '🌸 Soft Persona Exclusive: Gentle Squad Comms & Soothing Care',
+      narrative: `During a high-pressure ranked overtime, your soft, melodic voice calls out enemy positions over team comms. Your teammates play in a state of zen focus, admitting afterwards that your gentle tone cured their competitive tilt completely.`,
+      chatLogs: [
+        { sender: 'TiltedGamer_99', senderClass: 'sender-stranger', message: `I was ready to punch my monitor until ${personaName} started speaking… your voice is so soothing.` },
+        { sender: `${personaName}`, senderClass: 'sender-player', message: `deep breaths everyone! we did it together~ 🌸` },
+        { sender: 'ChillVibes', senderClass: 'sender-kev', message: `Protect this girl at all costs!` }
+      ]
+    });
+    events.push({
+      title: '🌸 Soft Persona Exclusive: Cozy Tea Break Guard Duty',
+      narrative: `You announce in team chat that you need to step away for thirty seconds to pour chamomile tea. Both teammates crouch right next to your idle character, swinging at anyone who gets near and guarding you with their digital lives.`,
+      chatLogs: [
+        { sender: 'Guardian_A', senderClass: 'sender-stranger', message: `Hurry back ${personaName}! Nobody touches you while you get your tea!` },
+        { sender: `${personaName}`, senderClass: 'sender-player', message: `back! thank you my brave knights :3` }
+      ]
+    });
   } else if (archetype === 'goth') {
     events.push({
       title: '🖤 Goth Persona Exclusive: The Aloof Sniper Matriarch',
@@ -212,6 +230,23 @@ export function generateGamingEvent(state: GameState, randomFn = Math.random): E
       chatLogs: [
         { sender: 'HumiliatedGuy', senderClass: 'sender-stranger', message: `i got cooked… she didn't even look back at my box…` },
         { sender: `${personaName}`, senderClass: 'sender-player', message: `don't flatter yourself.` }
+      ]
+    });
+    events.push({
+      title: '🖤 Goth Persona Exclusive: The Silent 20-Frag Headhunter',
+      narrative: `You queue into a hardcore deathmatch lobby. Not once do you turn on your microphone or use emotes. You execute twenty precision headshots with ruthless elegance. The opposition surrenders early, confessing in all-chat that they are honored to lose to you.`,
+      chatLogs: [
+        { sender: 'Vanquished_1', senderClass: 'sender-stranger', message: `She slaughtered our whole clan without uttering a syllable.` },
+        { sender: 'ShadowFan_44', senderClass: 'sender-stranger', message: `Goth queen diff. Untouchable.` },
+        { sender: `${personaName}`, senderClass: 'sender-player', message: `...leave the lobby.` }
+      ]
+    });
+    events.push({
+      title: '🖤 Goth Persona Exclusive: Obsidian Crypt Boss Solo',
+      narrative: `In a punishing dark fantasy raid, your teammates wipe within two minutes. Rather than resetting, you solo the massive obsidian boss with surgical dodges while your spectators watch in breathless veneration.`,
+      chatLogs: [
+        { sender: 'WipedTeammate', senderClass: 'sender-felix', message: `She's dodging frame-perfect… Mistress ${personaName} is a goddess…` },
+        { sender: `${personaName}`, senderClass: 'sender-player', message: `Watch and learn how to carry yourselves.` }
       ]
     });
   } else if (archetype === 'egirl') {
@@ -240,6 +275,49 @@ export function generateGamingEvent(state: GameState, randomFn = Math.random): E
         { sender: `${personaName}`, senderClass: 'sender-player', message: `make sure my hair looked cute in the thumbnail at least hehe 💕` }
       ]
     });
+    events.push({
+      title: '💋 E-Girl Persona Exclusive: The Victory Dance Selfie Bounty',
+      narrative: `Before the final championship match, you tease your squad in voice: 'Win this match for me, and I might post a cute victory selfie on my private story.' The squad enters an unstoppable berserk trance and steamrolls the lobby in five minutes flat.`,
+      chatLogs: [
+        { sender: 'SquadLead', senderClass: 'sender-stranger', message: `LOBBY CLEARED!! QUEEN WHERE IS THE STORY UPDATE?!` },
+        { sender: `${personaName}`, senderClass: 'sender-player', message: `good job boys~ check your notifications in five minutes 💅💋` }
+      ]
+    });
+    events.push({
+      title: '💋 E-Girl Persona Exclusive: Simp Civil War 5v5 Custom',
+      narrative: `You host a private 5v5 custom match where the winning team earns the privilege of carrying you through competitive queue all weekend. The orbiters clash with relentless intensity, desperate to prove their loyalty to you.`,
+      chatLogs: [
+        { sender: 'TryhardSimp_1', senderClass: 'sender-kev', message: `I will DIE before I let anyone else duo with ${personaName}!!` },
+        { sender: `${personaName}`, senderClass: 'sender-player', message: `fight hard sweeties, mama is watching~ 💕` }
+      ]
+    });
+  }
+
+  // --- RANDOM SKIN GIFT INTERACTIONS (PEOPLE BUYING THE PLAYER SKINS) ---
+  const allSkins = getAllSkins();
+  const unlockedSet = new Set(state.unlockedSkins || []);
+  const unownedSkins = allSkins.filter((s) => !unlockedSet.has(s.id));
+
+  if (unownedSkins.length > 0) {
+    const skinToGift = unownedSkins[getRandomInt(0, unownedSkins.length - 1, randomFn)];
+    events.push({
+      title: `🎁 A Devoted Teammate Bought You the ${skinToGift.name}!`,
+      narrative: `After carrying the lobby and bantering playfully over voice comms, a wealthy teammate is so mesmerized by you that he buys the ${skinToGift.name} (${skinToGift.icon}) and gifts it straight to your account! His attached note reads: 'For our queen, you deserve to look stunning in every match.'`,
+      giftedSkinId: skinToGift.id,
+      chatLogs: [
+        { sender: 'Teammate_Omega', senderClass: 'sender-kev', message: `Just gifted you the ${skinToGift.name} ${personaName}! You carried us so hard, please equip it next match!` },
+        { sender: `${personaName}`, senderClass: 'sender-player', message: archetype === 'goth' ? `...you didn't have to, but I'll wear it.` : archetype === 'egirl' ? `OMGGG you're the sweetest!! thank you baby~ 💋` : `omg no way?! you really bought this for me?! thank you so much 🥺💕` }
+      ]
+    });
+    events.push({
+      title: `🎁 Post-Match Secret Admirer Skin Gift: ${skinToGift.name}`,
+      narrative: `In the post-game lobby, a player from the enemy squad sends you a friend request along with a gifted cosmetic bundle: the ${skinToGift.name} (${skinToGift.icon})! He confesses in all-chat that he fell in love with your style and wanted you to have the prettiest loadout.`,
+      giftedSkinId: skinToGift.id,
+      chatLogs: [
+        { sender: 'Enemy_Simp99', senderClass: 'sender-stranger', message: `I couldn't even focus on aiming because of you ${personaName}... enjoy the new skin!` },
+        { sender: `${personaName}`, senderClass: 'sender-player', message: `aww that is so generous of you, thank you~ ✨` }
+      ]
+    });
   }
 
   // Check equipped skin stat boost (+1 soft for cute, +1 slutty for lewd, +1 dominance for goth)
@@ -265,7 +343,7 @@ export function generateGamingEvent(state: GameState, randomFn = Math.random): E
         : skinStatBoost.stat === 'slutty'
           ? '+1 Validation (Slutty)'
           : '+1 Dominance';
-    finalNarrative += `\n\n<p style="margin-top:0.75rem; color:#f472b6; font-size:0.95rem;"><strong>Equipped Skin Bonus:</strong> ${equippedSkin.icon} ${equippedSkin.name} (<span style="color:#4ade80; font-weight:700;">${boostLabel}</span> stat boost applied to this match!)</p>`;
+    finalNarrative += `\n\n<p class="equipped-skin-bonus-note"><strong>Equipped Skin Bonus:</strong> ${equippedSkin.icon} ${equippedSkin.name} (<span class="bonus-stat-tag">${boostLabel}</span> stat boost applied to this match!)</p>`;
   }
 
   return {
@@ -276,7 +354,8 @@ export function generateGamingEvent(state: GameState, randomFn = Math.random): E
     moneyGained,
     involvedRegular: selected.involvedRegular,
     equippedSkinUsed: equippedSkin?.name,
-    skinStatBoost
+    skinStatBoost,
+    giftedSkinId: selected.giftedSkinId
   };
 }
 
@@ -369,6 +448,7 @@ export function generateDiscordEvent(state: GameState, randomFn = Math.random): 
     involvedRegular?: 'dominic' | 'felix' | 'adrian' | 'gomez';
     unlocksVoiceTraining?: boolean;
     unlocksWorkout?: boolean;
+    giftedSkinId?: string;
   }> = [
     {
       title: 'The Boba & Coffee Tribute',
@@ -558,6 +638,23 @@ export function generateDiscordEvent(state: GameState, randomFn = Math.random): 
         { sender: `${personaName}`, senderClass: 'sender-player', message: `you have no idea how much this means to me… thank you from the bottom of my heart 💕` }
       ]
     });
+    events.push({
+      title: '🌸 Soft Persona Exclusive: Goodnight Audio Warmup & Whispered Thanks',
+      narrative: `You record a tiny 4-second audio note of your soft, breathy voice wishing the server sweet dreams. When you post it in #general, the entire chat freezes before exploding with emotional adoration and spontaneous cash tips.`,
+      chatLogs: [
+        { sender: `${personaName}`, senderClass: 'sender-player', message: `[Audio Note: sweet_dreams_everyone.mp3 🌸]` },
+        { sender: 'StunnedSimp', senderClass: 'sender-stranger', message: `HER VOICE IS AN ANGEL'S WHISPER I CAN DIE HAPPY` },
+        { sender: 'KindSupporter', senderClass: 'sender-felix', message: `[CashApp: +$${moneyGained}.00] Thank you for being our peace ${personaName}…` }
+      ]
+    });
+    events.push({
+      title: '🌸 Soft Persona Exclusive: Cozy Wishlist Unboxing Tease',
+      narrative: `You casually mention needing fuzzy pink slippers and scented vanilla candles for your desk setup. A server regular buys them instantly and sends extra money for warm cider.`,
+      chatLogs: [
+        { sender: 'CiderSimp', senderClass: 'sender-stranger', message: `Order confirmed for delivery tomorrow ${personaName}! [CashApp: +$${moneyGained}.00]` },
+        { sender: `${personaName}`, senderClass: 'sender-player', message: `you are way too kind to me… I don't know what to say 🥺💕` }
+      ]
+    });
   } else if (archetype === 'goth') {
     events.push({
       title: '🖤 Goth Persona Exclusive: Left on Delivered for Four Hours',
@@ -584,6 +681,14 @@ export function generateDiscordEvent(state: GameState, randomFn = Math.random): 
         { sender: 'HopefulSub', senderClass: 'sender-stranger', message: `how do I earn a role in your private lounge ${personaName}?` },
         { sender: `${personaName}`, senderClass: 'sender-player', message: `You don't ask. You send tribute and wait.` },
         { sender: 'HopefulSub', senderClass: 'sender-stranger', message: `[CashApp: +$${moneyGained}.00] Understood Mistress. I will wait.` }
+      ]
+    });
+    events.push({
+      title: '🖤 Goth Persona Exclusive: Sarcastic Rig & Desk Roast',
+      narrative: `A member nervously posts a picture of his battle station asking for your opinion. You deliver a scathing, aristocratic three-sentence critique of his cable management and RGB lighting. Thrilled by your attention, he sends an immediate tribute to fix it.`,
+      chatLogs: [
+        { sender: `${personaName}`, senderClass: 'sender-player', message: `Your neon rainbow lights look like a cheap carnival booth. Turn them off and clean your wires.` },
+        { sender: 'HumbledFan', senderClass: 'sender-stranger', message: `[CashApp: +$${moneyGained}.00] YES MISTRESS RIGHT AWAY MISTRESS` }
       ]
     });
   } else if (archetype === 'egirl') {
@@ -614,6 +719,42 @@ export function generateDiscordEvent(state: GameState, randomFn = Math.random): 
         { sender: `${personaName}`, senderClass: 'sender-player', message: `keep guessing boys~ 😌` }
       ]
     });
+    events.push({
+      title: '💋 E-Girl Persona Exclusive: Bidding War for Duo Queue Priority',
+      narrative: `You casually announce that you have an open slot in your private voice channel tomorrow evening. Three orbiters start aggressively outbidding each other with tips to claim the spot beside you.`,
+      chatLogs: [
+        { sender: 'Simp_A', senderClass: 'sender-stranger', message: `[CashApp: +$${moneyGained}.00] First bid on the duo spot!` },
+        { sender: 'Simp_B', senderClass: 'sender-kev', message: `[CashApp: +$${moneyGained + 5}.00] I outbid him! She's playing with ME!` },
+        { sender: `${personaName}`, senderClass: 'sender-player', message: `omg you boys are so competitive… keep going~ 💅💋` }
+      ]
+    });
+  }
+
+  // --- RANDOM SKIN GIFT INTERACTIONS IN DISCORD ---
+  const allSkins = getAllSkins();
+  const unlockedSet = new Set(state.unlockedSkins || []);
+  const unownedSkins = allSkins.filter((s) => !unlockedSet.has(s.id));
+
+  if (unownedSkins.length > 0) {
+    const skinToGift = unownedSkins[getRandomInt(0, unownedSkins.length - 1, randomFn)];
+    events.push({
+      title: `🎁 A Devoted Regular Surprises You with a Gifted Skin: ${skinToGift.name}!`,
+      narrative: `While chatting in Discord, a notification pops into your direct messages from a devoted community regular. He sent you an activation code for the ${skinToGift.name} (${skinToGift.icon})! He writes: 'Saw this in the cosmetics shop and immediately thought it was designed for you. Please wear it when you game!'`,
+      giftedSkinId: skinToGift.id,
+      chatLogs: [
+        { sender: 'DevotedOrbiter_7', senderClass: 'sender-stranger', message: `[Gift Code: ${skinToGift.id}_REDEEM] Hope you love the ${skinToGift.name} ${personaName}! You're going to look so cute in it!` },
+        { sender: `${personaName}`, senderClass: 'sender-player', message: archetype === 'goth' ? `...you have surprisingly good taste. Thank you.` : archetype === 'egirl' ? `NO WAY!! You actually bought it for me?! You're the best! 💋` : `oh my goodness… thank you so much! I'm equipping it right away 🥺💕` }
+      ]
+    });
+    events.push({
+      title: `🎁 Server Crowdfunds Your Dream Skin: ${skinToGift.name}!`,
+      narrative: `The server members noticed you admiring the ${skinToGift.name} (${skinToGift.icon}) in the shop. In secret, several regulars pooled their CashApp donations together and bought it for you as a community milestone tribute!`,
+      giftedSkinId: skinToGift.id,
+      chatLogs: [
+        { sender: 'CommunityMod', senderClass: 'sender-kev', message: `Surprise ${personaName}! We all chipped in to get you the ${skinToGift.name}! Milestone unlocked!` },
+        { sender: `${personaName}`, senderClass: 'sender-player', message: `you guys are the most incredible community ever… I love you all so much 💖` }
+      ]
+    });
   }
 
   const selected = events[getRandomInt(0, events.length - 1, randomFn)];
@@ -626,6 +767,7 @@ export function generateDiscordEvent(state: GameState, randomFn = Math.random): 
     moneyGained,
     involvedRegular: selected.involvedRegular,
     unlocksVoiceTraining: selected.unlocksVoiceTraining,
-    unlocksWorkout: selected.unlocksWorkout
+    unlocksWorkout: selected.unlocksWorkout,
+    giftedSkinId: selected.giftedSkinId
   };
 }

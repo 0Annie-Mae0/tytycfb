@@ -851,22 +851,22 @@ export const SCENE_GRAPH: SceneGraph = {
     text: (s: GameState) => {
       const activeSkin = s.equippedSkin ? getSkinById(s.equippedSkin) : null;
       const equippedText = activeSkin
-        ? `<div style="background: rgba(244, 114, 182, 0.15); border: 1px solid #f472b6; border-radius: 6px; padding: 0.85rem 1.25rem; margin: 1rem 0;">
-             <strong style="color: #fff;">Currently Equipped:</strong> ${activeSkin.icon} <span style="color: #fbcfe8; font-weight: 700;">${activeSkin.name}</span>
-             <div style="color: #cfd8e8; font-size: 0.85rem; margin-top: 0.35rem;">Active Match Boost: <strong style="color: #4ade80;">+1 ${activeSkin.statBoost === 'soft' ? 'Soft' : activeSkin.statBoost === 'slutty' ? 'Validation (Slutty)' : 'Dominance'}</strong> per match.</div>
+        ? `<div class="loadout-active-card">
+             <strong class="loadout-active-label">Currently Equipped:</strong> ${activeSkin.icon} <span class="loadout-active-name">${activeSkin.name}</span>
+             <div class="loadout-active-boost">Active Match Boost: <strong class="loadout-boost-val">+1 ${activeSkin.statBoost === 'soft' ? 'Soft' : activeSkin.statBoost === 'slutty' ? 'Validation (Slutty)' : 'Dominance'}</strong> per match.</div>
            </div>`
-        : `<div style="background: rgba(38, 44, 66, 0.5); border: 1px solid #262c42; border-radius: 6px; padding: 0.85rem 1.25rem; margin: 1rem 0; color: #7c88a8;">
+        : `<div class="loadout-empty-card">
              <strong>Currently Equipped:</strong> Standard Default Operator (No stat boost)
            </div>`;
 
       return `
-        <h3 style="font-size: 1.25rem; font-weight: 700; color: #fff; margin-bottom: 0.75rem;">Competitive Matchmaking: Operator Loadout</h3>
+        <h3 class="scene-heading">Competitive Matchmaking: Operator Loadout</h3>
         <p>Before launching into ranked matchmaking under <strong>${s.accountName ? `@${s.accountName}` : s.personaName}</strong>, choose which cosmetic skin set you want to equip.</p>
         <p>Your aesthetic directly impacts how male lobby players react to you and drives psychological persona drift:</p>
-        <ul style="color: #cfd8e8; font-size: 0.92rem; margin: 0.75rem 0 1rem 1.5rem; list-style-type: disc;">
-          <li><strong style="color: #f472b6;">Cute Skins:</strong> +1 Soft (Warm pastel, delicate, angel healer tropes)</li>
-          <li><strong style="color: #d946ef;">Lewd Skins:</strong> +1 Validation / Slutty (Latex, fishnets, bold flirty presence)</li>
-          <li><strong style="color: #a855f7;">Goth Skins:</strong> +1 Dominance (Obsidian spikes, dark velvet, authoritative chill)</li>
+        <ul class="loadout-category-list">
+          <li><strong class="text-cute">Cute Skins:</strong> +1 Soft (Warm pastel, delicate, angel healer tropes)</li>
+          <li><strong class="text-lewd">Lewd Skins:</strong> +1 Validation / Slutty (Latex, fishnets, bold flirty presence)</li>
+          <li><strong class="text-goth">Goth Skins:</strong> +1 Dominance (Obsidian spikes, dark velvet, authoritative chill)</li>
         </ul>
         ${equippedText}
         <p class="internal-thought">Putting on the skins isn't just an in-game cosmetic change anymore. Every time you wear them, the archetype sinks a little deeper into how you view yourself.</p>
@@ -956,23 +956,23 @@ export const SCENE_GRAPH: SceneGraph = {
       const owned = s.unlockedSkins || [];
       const balance = s.money;
       return `
-        <h3 style="font-size: 1.25rem; font-weight: 700; color: #fff; margin-bottom: 0.75rem;">Operator Wardrobe & Cosmetics Boutique</h3>
+        <h3 class="scene-heading">Operator Wardrobe & Cosmetics Boutique</h3>
         <p>The premium in-game store displays high-end operator skin sets. You can spend cash earned from tributes and streaming to unlock new looks that provide stat boosts when playing games.</p>
-        <p>Available Bank Balance: <strong style="color: #facc15; font-family: var(--font-mono);">$${balance}</strong> | Owned Skins: <strong style="color: #4ade80;">${owned.length}</strong></p>
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 0.75rem; margin: 1rem 0;">
+        <p class="shop-balance-bar">Available Bank Balance: <strong class="shop-balance-money">$${balance}</strong> | Owned Skins: <strong class="shop-balance-owned">${owned.length}</strong></p>
+        <div class="shop-skins-grid">
           ${Object.values(GAME_SKINS).map(skin => {
             const isOwned = owned.includes(skin.id);
             const isEquipped = s.equippedSkin === skin.id;
             return `
-              <div style="background: #0d0f17; border: 1px solid ${isEquipped ? '#f472b6' : '#262c42'}; border-radius: 6px; padding: 0.85rem;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
-                  <span style="font-weight: 700; color: #fff;">${skin.icon} ${skin.name}</span>
-                  <span style="font-size: 0.75rem; color: ${isEquipped ? '#f472b6' : isOwned ? '#4ade80' : '#facc15'}; font-weight: 700;">
+              <div class="shop-skin-card ${isEquipped ? 'is-equipped' : ''}">
+                <div class="shop-skin-header">
+                  <span class="shop-skin-name">${skin.icon} ${skin.name}</span>
+                  <span class="shop-skin-tag ${isEquipped ? 'tag-equipped' : isOwned ? 'tag-owned' : 'tag-price'}">
                     ${isEquipped ? 'EQUIPPED' : isOwned ? 'OWNED' : `$${skin.cost}`}
                   </span>
                 </div>
-                <div style="font-size: 0.82rem; color: #cfd8e8; margin-bottom: 0.4rem;">${skin.description}</div>
-                <div style="font-size: 0.75rem; color: #7c88a8;">Boost: +1 ${skin.statBoost === 'soft' ? 'Soft' : skin.statBoost === 'slutty' ? 'Validation (Slutty)' : 'Dominance'}</div>
+                <div class="shop-skin-desc">${skin.description}</div>
+                <div class="shop-skin-boost">Boost: +1 ${skin.statBoost === 'soft' ? 'Soft' : skin.statBoost === 'slutty' ? 'Validation (Slutty)' : 'Dominance'}</div>
               </div>
             `;
           }).join('')}
@@ -1073,6 +1073,13 @@ export const SCENE_GRAPH: SceneGraph = {
       if (event.skinStatBoost) {
         s[event.skinStatBoost.stat] += event.skinStatBoost.amount;
       }
+      if (event.giftedSkinId) {
+        if (!s.unlockedSkins) s.unlockedSkins = [];
+        if (!s.unlockedSkins.includes(event.giftedSkinId)) {
+          s.unlockedSkins.push(event.giftedSkinId);
+          s.skins = s.unlockedSkins.length;
+        }
+      }
     },
     text: (s: GameState) => {
       const ev = s.lastGameEvent || generateGamingEvent(s);
@@ -1092,19 +1099,35 @@ export const SCENE_GRAPH: SceneGraph = {
 
       const moneyTag =
         ev.moneyGained && ev.moneyGained > 0
-          ? `<span style="color: #facc15; font-weight: 700; font-family: var(--font-mono);">💰 +$${ev.moneyGained} Cash</span>`
+          ? `<span class="event-reward-tag reward-money">💰 +$${ev.moneyGained} Cash</span>`
           : '';
 
       const skinBoostBadge = ev.skinStatBoost
-        ? `<span style="color: #f472b6; font-weight: 700; font-family: var(--font-mono);">⚡ +${ev.skinStatBoost.amount} ${ev.skinStatBoost.stat === 'soft' ? 'Soft' : ev.skinStatBoost.stat === 'slutty' ? 'Validation (Slutty)' : 'Dominance'} (Skin Boost)</span>`
+        ? `<span class="event-reward-tag reward-boost">⚡ +${ev.skinStatBoost.amount} ${ev.skinStatBoost.stat === 'soft' ? 'Soft' : ev.skinStatBoost.stat === 'slutty' ? 'Validation (Slutty)' : 'Dominance'} (Skin Boost)</span>`
+        : '';
+
+      const skinGiftBanner = ev.giftedSkinId
+        ? (() => {
+            const gifted = getSkinById(ev.giftedSkinId);
+            return `
+        <div class="event-banner banner-gift">
+          <span class="banner-icon">🎁</span>
+          <div>
+            <div class="banner-title">New Skin Gifted: ${gifted ? gifted.name : 'Cosmetic Skin'}!</div>
+            <div class="banner-desc">${gifted?.icon} An admirer bought you the <strong>${gifted?.name}</strong>! It has been added to your collection. You can equip it before matches!</div>
+          </div>
+        </div>
+      `;
+          })()
         : '';
 
       return `
-        <h3 style="font-size: 1.25rem; font-weight: 700; color: #fff; margin-bottom: 0.75rem;">${ev.title}</h3>
+        ${skinGiftBanner}
+        <h3 class="scene-heading">${ev.title}</h3>
         <p>${ev.narrative}</p>
         ${chatHtml}
-        <div style="background: rgba(244, 114, 182, 0.1); border: 1px solid rgba(244, 114, 182, 0.3); border-radius: 6px; padding: 0.85rem 1.25rem; margin-top: 1.25rem; display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
-          <span style="color: #4ade80; font-weight: 700; font-family: var(--font-mono);">✨ +${ev.repGained} Reputation</span>
+        <div class="event-rewards-box">
+          <span class="event-reward-tag reward-rep">✨ +${ev.repGained} Reputation</span>
           ${moneyTag}
           ${skinBoostBadge}
         </div>
@@ -1144,6 +1167,13 @@ export const SCENE_GRAPH: SceneGraph = {
       if (event.unlocksWorkout) {
         s.unlockedWorkout = true;
       }
+      if (event.giftedSkinId) {
+        if (!s.unlockedSkins) s.unlockedSkins = [];
+        if (!s.unlockedSkins.includes(event.giftedSkinId)) {
+          s.unlockedSkins.push(event.giftedSkinId);
+          s.skins = s.unlockedSkins.length;
+        }
+      }
     },
     text: (s: GameState) => {
       const ev = s.lastDiscordEvent || generateDiscordEvent(s);
@@ -1163,11 +1193,11 @@ export const SCENE_GRAPH: SceneGraph = {
 
       const discoveryBanner = ev.newDiscovery
         ? `
-        <div style="background: rgba(168, 85, 247, 0.18); border: 1px solid #a855f7; border-radius: 6px; padding: 0.85rem 1.25rem; margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.75rem;">
-          <span style="font-size: 1.35rem;">🔓</span>
+        <div class="event-banner banner-discovery">
+          <span class="banner-icon">🔓</span>
           <div>
-            <div style="color: #e9d5ff; font-weight: 700; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.05em;">New Regular Discovered: ${ev.newDiscovery.toUpperCase()}!</div>
-            <div style="color: #cfd8e8; font-size: 0.85rem;">You have caught ${ev.newDiscovery === 'dominic' ? 'Dominic' : ev.newDiscovery === 'felix' ? 'Felix' : 'Adrian'}'s attention! Private messaging with him is now unlocked under 'Message Regulars'.</div>
+            <div class="banner-title">New Regular Discovered: ${ev.newDiscovery.toUpperCase()}!</div>
+            <div class="banner-desc">You have caught ${ev.newDiscovery === 'dominic' ? 'Dominic' : ev.newDiscovery === 'felix' ? 'Felix' : 'Adrian'}'s attention! Private messaging with him is now unlocked under 'Message Regulars'.</div>
           </div>
         </div>
       `
@@ -1175,11 +1205,11 @@ export const SCENE_GRAPH: SceneGraph = {
 
       const voiceBanner = ev.unlocksVoiceTraining
         ? `
-        <div style="background: rgba(244, 114, 182, 0.18); border: 1px solid #f472b6; border-radius: 6px; padding: 0.85rem 1.25rem; margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.75rem;">
-          <span style="font-size: 1.35rem;">🎙️</span>
+        <div class="event-banner banner-voice">
+          <span class="banner-icon">🎙️</span>
           <div>
-            <div style="color: #fbcfe8; font-weight: 700; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.05em;">Activity Unlocked: Voice Training!</div>
-            <div style="color: #cfd8e8; font-size: 0.85rem;">Someone in the server is begging to hear your voice! You can now access 'Voice Training' from your desk hub to elevate your pitch and resonance.</div>
+            <div class="banner-title">Activity Unlocked: Voice Training!</div>
+            <div class="banner-desc">Someone in the server is begging to hear your voice! You can now access 'Voice Training' from your desk hub to elevate your pitch and resonance.</div>
           </div>
         </div>
       `
@@ -1187,26 +1217,42 @@ export const SCENE_GRAPH: SceneGraph = {
 
       const workoutBanner = ev.unlocksWorkout
         ? `
-        <div style="background: rgba(217, 70, 239, 0.18); border: 1px solid #d946ef; border-radius: 6px; padding: 0.85rem 1.25rem; margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.75rem;">
-          <span style="font-size: 1.35rem;">👗</span>
+        <div class="event-banner banner-workout">
+          <span class="banner-icon">👗</span>
           <div>
-            <div style="color: #f5d0fe; font-weight: 700; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.05em;">Activity Unlocked: Working Out!</div>
-            <div style="color: #cfd8e8; font-size: 0.85rem;">Someone offered to buy you feminine clothes! You can now access 'Work Out' from your desk hub to cinch your waist and build feminine curves.</div>
+            <div class="banner-title">Activity Unlocked: Working Out!</div>
+            <div class="banner-desc">Someone offered to buy you feminine clothes! You can now access 'Work Out' from your desk hub to cinch your waist and build feminine curves.</div>
           </div>
         </div>
       `
+        : '';
+
+      const skinGiftBanner = ev.giftedSkinId
+        ? (() => {
+            const gifted = getSkinById(ev.giftedSkinId);
+            return `
+        <div class="event-banner banner-gift">
+          <span class="banner-icon">🎁</span>
+          <div>
+            <div class="banner-title">New Skin Gifted: ${gifted ? gifted.name : 'Cosmetic Skin'}!</div>
+            <div class="banner-desc">${gifted?.icon} A generous regular gifted you the <strong>${gifted?.name}</strong>! It has been added to your collection!</div>
+          </div>
+        </div>
+      `;
+          })()
         : '';
 
       return `
         ${discoveryBanner}
         ${voiceBanner}
         ${workoutBanner}
-        <h3 style="font-size: 1.25rem; font-weight: 700; color: #fff; margin-bottom: 0.75rem;">${ev.title}</h3>
+        ${skinGiftBanner}
+        <h3 class="scene-heading">${ev.title}</h3>
         <p>${ev.narrative}</p>
         ${chatHtml}
-        <div style="background: rgba(74, 222, 128, 0.1); border: 1px solid rgba(74, 222, 128, 0.3); border-radius: 6px; padding: 0.85rem 1.25rem; margin-top: 1.25rem; display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
-          <span style="color: #4ade80; font-weight: 700; font-family: var(--font-mono);">✨ +${ev.repGained} Simp Reputation</span>
-          <span style="color: #facc15; font-weight: 700; font-family: var(--font-mono);">💰 +$${ev.moneyGained} Cash</span>
+        <div class="event-rewards-box">
+          <span class="event-reward-tag reward-rep">✨ +${ev.repGained} Reputation</span>
+          <span class="event-reward-tag reward-money">💰 +$${ev.moneyGained} Cash</span>
         </div>
         <p class="internal-thought" style="margin-top: 1rem;">Every hour you spend here makes your real life feel further and further away. The tributes keep rolling in.</p>
       `;
@@ -1234,24 +1280,24 @@ export const SCENE_GRAPH: SceneGraph = {
       return `
         <p>Who do you want to reach out to privately tonight?</p>
         <p>Each of the four men has distinct needs, dynamic route thresholds, and special interactions that advance your feminization.</p>
-        <div style="background: #0c0e17; border: 1px solid #262c42; border-radius: 6px; padding: 1rem 1.25rem; margin: 1rem 0; font-size: 0.9rem;">
-          <div style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; color: #7c88a8; margin-bottom: 0.6rem; font-weight: 700;">Orbiter Direct Line Status</div>
-          <div style="display: flex; flex-direction: column; gap: 0.5rem;">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-              <span style="color: #94a3b8; font-weight: 600;">Dominic (Executive Sugar Daddy):</span>
-              <span style="color: ${disc.dominic ? '#4ade80' : '#7c88a8'}; font-size: 0.85rem;">${disc.dominic ? '✅ Discovered & Available' : '🔒 Locked (Discover via Discord texting)'}</span>
+        <div class="orbiters-status-box">
+          <div class="orbiters-header">Orbiter Direct Line Status</div>
+          <div class="orbiters-list">
+            <div class="orbiter-row">
+              <span class="orbiter-name orbiter-dominic">Dominic (Executive Sugar Daddy):</span>
+              <span class="orbiter-status ${disc.dominic ? 'status-unlocked' : 'status-locked'}">${disc.dominic ? '✅ Discovered & Available' : '🔒 Locked (Discover via Discord texting)'}</span>
             </div>
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-              <span style="color: #818cf8; font-weight: 600;">Felix (Submissive Chastity Pet):</span>
-              <span style="color: ${disc.felix ? '#4ade80' : '#7c88a8'}; font-size: 0.85rem;">${disc.felix ? '✅ Discovered & Available' : '🔒 Locked (Discover via Discord texting)'}</span>
+            <div class="orbiter-row">
+              <span class="orbiter-name orbiter-felix">Felix (Submissive Chastity Pet):</span>
+              <span class="orbiter-status ${disc.felix ? 'status-unlocked' : 'status-locked'}">${disc.felix ? '✅ Discovered & Available' : '🔒 Locked (Discover via Discord texting)'}</span>
             </div>
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-              <span style="color: #34d399; font-weight: 600;">Adrian (Wholesome Indie Dev):</span>
-              <span style="color: ${disc.adrian ? '#4ade80' : '#7c88a8'}; font-size: 0.85rem;">${disc.adrian ? '✅ Discovered & Available' : '🔒 Locked (Discover via Discord texting)'}</span>
+            <div class="orbiter-row">
+              <span class="orbiter-name orbiter-adrian">Adrian (Wholesome Indie Dev):</span>
+              <span class="orbiter-status ${disc.adrian ? 'status-unlocked' : 'status-locked'}">${disc.adrian ? '✅ Discovered & Available' : '🔒 Locked (Discover via Discord texting)'}</span>
             </div>
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-              <span style="color: #a855f7; font-weight: 600;">Gomez (The Architect / Strategy):</span>
-              <span style="color: #4ade80; font-size: 0.85rem;">✅ Active Mentor</span>
+            <div class="orbiter-row">
+              <span class="orbiter-name orbiter-gomez">Gomez (The Architect / Strategy):</span>
+              <span class="orbiter-status status-unlocked">✅ Active Mentor</span>
             </div>
           </div>
         </div>

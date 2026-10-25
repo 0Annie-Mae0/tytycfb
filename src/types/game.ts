@@ -104,6 +104,7 @@ export interface EventResult {
   unlocksWorkout?: boolean;
   equippedSkinUsed?: string;
   skinStatBoost?: { stat: 'soft' | 'slutty' | 'dominant'; amount: number };
+  giftedSkinId?: string;
 }
 
 export interface AssetDefinition {

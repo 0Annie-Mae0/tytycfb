@@ -22,9 +22,9 @@ export const NotificationToast: React.FC<NotificationToastProps> = ({
   if (!message) return null;
 
   const typeStyles = {
-    info: 'border-[#38bdf8] text-[#38bdf8]',
-    success: 'border-[#4ade80] text-[#4ade80]',
-    warn: 'border-[#facc15] text-[#facc15]'
+    info: 'toast-info border-[#38bdf8] text-[#38bdf8]',
+    success: 'toast-success border-[#4ade80] text-[#4ade80]',
+    warn: 'toast-warn border-[#facc15] text-[#facc15]'
   };
 
   return (

@@ -54,11 +54,11 @@ export const SceneViewport: React.FC<SceneViewportProps> = ({
     <main
       id="viewport"
       tabIndex={-1}
-      className="p-6 md:p-12 flex flex-col max-w-[920px] w-full overflow-y-auto"
+      className="p-6 md:p-12 flex flex-col max-w-[960px] w-full mx-auto md:mx-0 overflow-y-auto flex-1 transition-all duration-300"
     >
       {/* Scene Image Frame */}
       {scene.image && (
-        <div className="w-full h-[280px] md:h-[320px] bg-[#06070a] border border-[#262c42] rounded-lg overflow-hidden mb-7 relative shrink-0">
+        <div className="scene-image-frame w-full h-[280px] md:h-[320px] rounded-lg overflow-hidden mb-7 relative shrink-0">
           {asset && !imageFailed ? (
             <img
               src={asset.path}
@@ -67,16 +67,16 @@ export const SceneViewport: React.FC<SceneViewportProps> = ({
               className="w-full h-full object-cover"
             />
           ) : (
-            <div className="w-full h-full flex flex-col items-center justify-center bg-radial from-[#181d30] to-[#0d0f18] p-6 text-center border border-dashed border-[#3a4366]">
-              <span className="font-mono text-xs text-[#f472b6] bg-[#f472b6]/10 px-2.5 py-1 rounded mb-2 uppercase">
+            <div className="scene-placeholder w-full h-full flex flex-col items-center justify-center p-6 text-center border border-dashed">
+              <span className="placeholder-path">
                 {asset?.path || `/${scene.image}`}
               </span>
               {asset && (
-                <span className="text-xs uppercase text-[#a855f7] tracking-wider mb-2 font-semibold">
+                <span className="placeholder-category">
                   {asset.category}
                 </span>
               )}
-              <span className="text-sm text-[#cfd8e8] italic max-w-[85%]">
+              <span className="placeholder-desc">
                 &ldquo;{asset?.desc || `Scene asset: ${scene.image}`}&rdquo;
               </span>
             </div>
@@ -119,13 +119,13 @@ export const SceneViewport: React.FC<SceneViewportProps> = ({
             key={idx}
             type="button"
             onClick={() => handleChoiceClick(idx)}
-            className="group bg-[#1a1e2e] hover:bg-[#232940] hover:border-[#f472b6] hover:translate-x-1 border border-[#262c42] text-[#dce3f1] rounded-md px-5 py-3.5 text-left text-base cursor-pointer transition-all flex justify-between items-center gap-3"
+            className="choice-button group bg-[#1a1e2e] hover:bg-[#232940] hover:border-[#f472b6] hover:translate-x-1 border border-[#262c42] text-[#dce3f1] rounded-md px-5 py-3.5 text-left text-base cursor-pointer transition-all flex justify-between items-center gap-3"
           >
-            <span className="font-medium group-hover:text-white transition-colors">
+            <span className="choice-text font-medium group-hover:text-white transition-colors">
               {choice.text}
             </span>
             {choice.hint && (
-              <span className="text-xs text-[#f472b6] font-mono tracking-tight shrink-0 bg-[#f472b6]/10 px-2 py-0.5 rounded">
+              <span className="choice-hint text-xs text-[#f472b6] font-mono tracking-tight shrink-0 bg-[#f472b6]/10 px-2 py-0.5 rounded">
                 {choice.hint}
               </span>
             )}

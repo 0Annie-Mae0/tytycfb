@@ -7,29 +7,62 @@ import {
   getPortraitInfo
 } from '../engine/gameEngine';
 import { ASSET_MANIFEST } from '../data/assets';
+import { getSkinById } from '../data/skins';
 
 interface HUDProps {
   state: GameState;
+  isCollapsed?: boolean;
+  onToggleCollapse?: () => void;
 }
 
-export const HUD: React.FC<HUDProps> = ({ state }) => {
+export const HUD: React.FC<HUDProps> = ({
+  state,
+  isCollapsed = false,
+  onToggleCollapse
+}) => {
   const [imageError, setImageError] = useState(false);
   const { key: portraitKey, displayName, subName } = getPortraitInfo(state);
   const portraitAsset = ASSET_MANIFEST[portraitKey];
+  const equippedSkinObj = state.equippedSkin ? getSkinById(state.equippedSkin) : null;
 
   return (
     <aside
       id="sidebar"
       aria-label="Character and status sidebar"
-      className="bg-[#0d0f17] border-r border-[#262c42] p-6 flex flex-col gap-5 overflow-y-auto max-h-screen sticky top-0 w-full md:w-[320px] shrink-0"
+      aria-hidden={isCollapsed}
+      className={`sidebar-container bg-[#0d0f17] border-r border-[#262c42] flex flex-col overflow-y-auto max-h-screen sticky top-0 transition-all duration-300 ease-in-out ${
+        isCollapsed
+          ? 'w-0 p-0 border-r-0 opacity-0 pointer-events-none overflow-hidden select-none md:w-0'
+          : 'w-full md:w-[320px] p-6 gap-5 shrink-0 opacity-100'
+      }`}
     >
+      {/* Sidebar Header with Collapse Button */}
+      <div className="flex items-center justify-between pb-1 -mt-1 border-b border-[#262c42]">
+        <div className="flex items-center gap-1.5 text-xs font-mono text-[#7c88a8]">
+          <span>📊</span>
+          <span className="font-semibold uppercase tracking-wider text-[0.7rem]">Status Sidebar</span>
+        </div>
+        {onToggleCollapse && (
+          <button
+            type="button"
+            onClick={onToggleCollapse}
+            className="sidebar-toggle-btn text-[0.72rem] font-mono px-2 py-0.5 rounded border border-[#262c42] text-[#7c88a8] hover:text-white hover:border-[#f472b6] transition-all flex items-center gap-1 cursor-pointer"
+            title="Collapse sidebar"
+            aria-label="Collapse sidebar"
+          >
+            <span>◀</span>
+            <span>Hide</span>
+          </button>
+        )}
+      </div>
+
       {/* Identity */}
       <div className="bg-[#1a1e2e] border border-[#262c42] rounded-md p-4">
         <div className="text-[0.72rem] uppercase tracking-[0.12em] text-[#7c88a8] border-b border-[#262c42] pb-1.5 mb-2.5 font-semibold">
           Identity
         </div>
 
-        <div className="w-full h-[180px] bg-[#050608] border border-[#262c42] rounded-md overflow-hidden mb-3 flex items-center justify-center relative">
+        <div className="avatar-frame w-full h-[180px] rounded-md overflow-hidden mb-3 flex items-center justify-center relative">
           {portraitAsset && !imageError ? (
             <img
               src={portraitAsset.path}
@@ -38,14 +71,14 @@ export const HUD: React.FC<HUDProps> = ({ state }) => {
               className="w-full h-full object-cover"
             />
           ) : (
-            <div className="w-full h-full flex flex-col items-center justify-center bg-radial from-[#181d30] to-[#0d0f18] p-3 text-center">
-              <span className="font-mono text-[0.7rem] text-[#f472b6] bg-[#f472b6]/10 px-2 py-0.5 rounded uppercase mb-1">
+            <div className="avatar-placeholder w-full h-full flex flex-col items-center justify-center p-3 text-center">
+              <span className="avatar-placeholder-key">
                 {portraitKey}
               </span>
-              <span className="text-xs text-[#cfd8e8] font-medium">
+              <span className="avatar-placeholder-name">
                 [{displayName}]
               </span>
-              <span className="text-[0.7rem] text-[#7c88a8] mt-1 line-clamp-2">
+              <span className="avatar-placeholder-desc">
                 {portraitAsset?.desc || 'Character Avatar'}
               </span>
             </div>
@@ -98,7 +131,7 @@ export const HUD: React.FC<HUDProps> = ({ state }) => {
             {state.transitionProgress}%
           </span>
         </div>
-        <div className="w-full h-1.5 bg-[#090a10] rounded-sm overflow-hidden mb-3">
+        <div className="w-full h-1.5 progress-bar-track rounded-sm overflow-hidden mb-3">
           <div
             className="h-full bg-[#f472b6] transition-all duration-300"
             style={{ width: `${state.transitionProgress}%` }}
@@ -118,7 +151,7 @@ export const HUD: React.FC<HUDProps> = ({ state }) => {
             {state.bodyFemininity} / 100
           </span>
         </div>
-        <div className="w-full h-1.5 bg-[#090a10] rounded-sm overflow-hidden mb-3">
+        <div className="w-full h-1.5 progress-bar-track rounded-sm overflow-hidden mb-3">
           <div
             className="h-full bg-[#d946ef] transition-all duration-300"
             style={{ width: `${Math.min(state.bodyFemininity, 100)}%` }}
@@ -144,7 +177,7 @@ export const HUD: React.FC<HUDProps> = ({ state }) => {
           <span className="text-[#cfd8e8]">Soft:</span>
           <span className="font-mono text-[#f472b6]">{state.soft}</span>
         </div>
-        <div className="w-full h-1.5 bg-[#090a10] rounded-sm overflow-hidden mb-2">
+        <div className="w-full h-1.5 progress-bar-track rounded-sm overflow-hidden mb-2">
           <div
             className="h-full bg-[#f472b6] transition-all duration-300"
             style={{ width: `${Math.min(state.soft * 8, 100)}%` }}
@@ -156,7 +189,7 @@ export const HUD: React.FC<HUDProps> = ({ state }) => {
           <span className="text-[#cfd8e8]">Validation (Slutty):</span>
           <span className="font-mono text-[#d946ef]">{state.slutty}</span>
         </div>
-        <div className="w-full h-1.5 bg-[#090a10] rounded-sm overflow-hidden mb-2">
+        <div className="w-full h-1.5 progress-bar-track rounded-sm overflow-hidden mb-2">
           <div
             className="h-full bg-[#d946ef] transition-all duration-300"
             style={{ width: `${Math.min(state.slutty * 8, 100)}%` }}
@@ -168,7 +201,7 @@ export const HUD: React.FC<HUDProps> = ({ state }) => {
           <span className="text-[#cfd8e8]">Dominance:</span>
           <span className="font-mono text-[#a855f7]">{state.dominant}</span>
         </div>
-        <div className="w-full h-1.5 bg-[#090a10] rounded-sm overflow-hidden mb-2">
+        <div className="w-full h-1.5 progress-bar-track rounded-sm overflow-hidden mb-2">
           <div
             className="h-full bg-[#a855f7] transition-all duration-300"
             style={{ width: `${Math.min(state.dominant * 8, 100)}%` }}
@@ -180,7 +213,7 @@ export const HUD: React.FC<HUDProps> = ({ state }) => {
           <span className="text-[#cfd8e8]">Bitterness:</span>
           <span className="font-mono text-[#38bdf8]">{state.bitter}</span>
         </div>
-        <div className="w-full h-1.5 bg-[#090a10] rounded-sm overflow-hidden mb-1">
+        <div className="w-full h-1.5 progress-bar-track rounded-sm overflow-hidden mb-1">
           <div
             className="h-full bg-[#38bdf8] transition-all duration-300"
             style={{ width: `${Math.min(state.bitter * 8, 100)}%` }}
@@ -200,7 +233,7 @@ export const HUD: React.FC<HUDProps> = ({ state }) => {
           </strong>
         </div>
         <div className="flex justify-between text-sm mb-3">
-          <span className="text-[#cfd8e8]">Simp Rep:</span>
+          <span className="text-[#cfd8e8]">Reputation:</span>
           <strong className="text-[#4ade80] font-semibold" id="hud-rep">
             {state.rep}
           </strong>
@@ -244,6 +277,30 @@ export const HUD: React.FC<HUDProps> = ({ state }) => {
           <span className="font-mono text-white">{state.gomezPoints}</span>
         </div>
       </div>
+
+      {/* Operator Wardrobe & Loadout */}
+      {Boolean(state.unlockedSkins && state.unlockedSkins.length > 0) && (
+        <div className="bg-[#1a1e2e] border border-[#262c42] rounded-md p-4">
+          <div className="text-[0.72rem] uppercase tracking-[0.12em] text-[#7c88a8] border-b border-[#262c42] pb-1.5 mb-2.5 font-semibold flex justify-between items-center">
+            <span>Operator Wardrobe</span>
+            <span className="text-[#f472b6] font-mono text-[0.7rem]">{state.unlockedSkins?.length ?? 0} Unlocked</span>
+          </div>
+          {equippedSkinObj ? (
+            <div className="text-xs">
+              <div className="text-[#cfd8e8] mb-1">
+                Equipped: <strong className="text-white">{equippedSkinObj.icon} {equippedSkinObj.name}</strong>
+              </div>
+              <div className="text-[0.7rem] text-[#4ade80] font-mono">
+                ⚡ Match Boost: +1 {equippedSkinObj.statBoost === 'soft' ? 'Soft' : equippedSkinObj.statBoost === 'slutty' ? 'Validation (Slutty)' : 'Dominance'}
+              </div>
+            </div>
+          ) : (
+            <div className="text-xs text-[#7c88a8] italic">
+              Default Operator (no active match boost)
+            </div>
+          )}
+        </div>
+      )}
     </aside>
   );
 };

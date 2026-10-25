@@ -211,3 +211,109 @@ test('Activity Unlocks: Voice training, Working out, and Make-up are hidden init
   // Makeup still remains hidden
   assert.equal(availableChoices.some((c) => c.target === 'action_makeup'), false);
 });
+
+test('Undo / History: canGoBack returns true after choices and goBack retracts choice', () => {
+  const engine = new GameEngine();
+  assert.equal(engine.canGoBack(), false);
+
+  // Execute choice on start scene
+  engine.executeChoice(0);
+  assert.equal(engine.getState().currentScene, 'scene_character_creation');
+  assert.equal(engine.canGoBack(), true);
+
+  // Retract choice
+  const reverted = engine.goBack();
+  assert.equal(reverted, true);
+  assert.equal(engine.getState().currentScene, 'scene_start');
+});
+
+test('Skin Stat Boosts: cute skins grant +1 soft, lewd skins grant +1 slutty, goth skins grant +1 dominance', () => {
+  // Test cute skin boost (+1 soft)
+  const engineCute = new GameEngine();
+  engineCute.setState((draft) => {
+    draft.unlockedSkins = ['skin_cute_pastel'];
+    draft.equippedSkin = 'skin_cute_pastel';
+    draft.soft = 0;
+  });
+  engineCute.goTo('action_play_games');
+  assert.equal(engineCute.getState().soft, 1);
+
+  // Test lewd skin boost (+1 slutty)
+  const engineLewd = new GameEngine();
+  engineLewd.setState((draft) => {
+    draft.unlockedSkins = ['skin_lewd_latex'];
+    draft.equippedSkin = 'skin_lewd_latex';
+    draft.slutty = 0;
+  });
+  engineLewd.goTo('action_play_games');
+  assert.equal(engineLewd.getState().slutty, 1);
+
+  // Test goth skin boost (+1 dominance)
+  const engineGoth = new GameEngine();
+  engineGoth.setState((draft) => {
+    draft.unlockedSkins = ['skin_goth_empress'];
+    draft.equippedSkin = 'skin_goth_empress';
+    draft.dominant = 0;
+  });
+  engineGoth.goTo('action_play_games');
+  assert.equal(engineGoth.getState().dominant, 1);
+});
+
+test('Random Skin Gifting: players can be gifted unowned skins in gaming and Discord events', () => {
+  const state = createInitialState();
+  state.unlockedSkins = [];
+
+  let giftedGamingSkinFound = false;
+  let giftedDiscordSkinFound = false;
+
+  for (let i = 0; i < 200; i++) {
+    const gameEv = generateGamingEvent(state);
+    if (gameEv.giftedSkinId) giftedGamingSkinFound = true;
+
+    const discEv = generateDiscordEvent(state);
+    if (discEv.giftedSkinId) giftedDiscordSkinFound = true;
+
+    if (giftedGamingSkinFound && giftedDiscordSkinFound) break;
+  }
+
+  assert.equal(giftedGamingSkinFound, true, 'Expected at least one skin gift in gaming events');
+  assert.equal(giftedDiscordSkinFound, true, 'Expected at least one skin gift in Discord events');
+});
+
+test('Persona Exclusive Scenes: soft, goth, and e-girl archetypes generate exclusive gaming and Discord scenes', () => {
+  const testArchetype = (type: 'soft' | 'goth' | 'egirl', expectedSubstring: string) => {
+    const s = createInitialState();
+    s.personaType = type;
+    s.unlockedSkins = ['skin_cute_pastel', 'skin_cute_bunny', 'skin_lewd_latex', 'skin_lewd_fishnet', 'skin_goth_empress', 'skin_goth_vampire'];
+    let foundExclusiveGaming = false;
+    let foundExclusiveDiscord = false;
+
+    for (let i = 0; i < 150; i++) {
+      const g = generateGamingEvent(s);
+      if (g.title.includes(expectedSubstring)) foundExclusiveGaming = true;
+
+      const d = generateDiscordEvent(s);
+      if (d.title.includes(expectedSubstring)) foundExclusiveDiscord = true;
+    }
+
+    assert.ok(foundExclusiveGaming, `Expected exclusive gaming event for ${type}`);
+    assert.ok(foundExclusiveDiscord, `Expected exclusive Discord event for ${type}`);
+  };
+
+  testArchetype('soft', 'Soft Persona Exclusive');
+  testArchetype('goth', 'Goth Persona Exclusive');
+  testArchetype('egirl', 'E-Girl Persona Exclusive');
+});
+
+test('Scene Graph: all scenes render text successfully with valid string output', () => {
+  const state = createInitialState();
+  state.unlockedSkins = ['skin_cute_pastel'];
+  state.equippedSkin = 'skin_cute_pastel';
+  state.discoveredRegulars = { dominic: true, felix: true, adrian: true, gomez: true };
+
+  for (const [sceneId, scene] of Object.entries(SCENE_GRAPH)) {
+    const text = typeof scene.text === 'function' ? scene.text(state) : scene.text;
+    assert.ok(typeof text === 'string' && text.length > 0, `Scene ${sceneId} should return non-empty string`);
+  }
+});
+
